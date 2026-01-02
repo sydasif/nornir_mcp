@@ -1,0 +1,11 @@
+[project]
+name = "nornir-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "nornir>=3.5.0",
+    "nornir-napalm>=0.5.0",
+    "nornir-utils>=0.2.0",
+]

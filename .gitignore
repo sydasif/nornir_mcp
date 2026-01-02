@@ -15,3 +15,4 @@ groups.yaml
 defaults.yaml
 lab/*
 !cisco.clab.yaml
+.claude/

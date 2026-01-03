@@ -45,6 +45,18 @@ The server uses programmatic configuration with environment variable expansion:
 
 Configuration is initialized programmatically in the code rather than from external config files.
 
+### Environment Variable Configuration
+
+The `NORNIR_INVENTORY_PATH` environment variable is set in the `.mcp.json` configuration file:
+
+```json
+{
+    "env": {
+        "NORNIR_INVENTORY_PATH": "/opt/inventory"
+    }
+}
+```
+
 ## Security Considerations
 
 - Device credentials are managed through Nornir inventory configuration

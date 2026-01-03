@@ -12,6 +12,7 @@ This project provides an MCP server that exposes Nornir network automation capab
 - **Device Facts**: Gather comprehensive device information (model, serial, OS version, vendor) using NAPALM
 - **Targeted Queries**: Query specific devices or all devices in the inventory
 - **Network Automation**: Provides programmatic access to network infrastructure
+- **Environment Variable Configuration**: Uses environment variables for inventory path configuration
 
 ## Architecture
 
@@ -34,18 +35,22 @@ Gathers device facts from network equipment using NAPALM. Can target a specific 
 
 ## Configuration
 
-The server reads configuration from:
+The server uses programmatic configuration with environment variable expansion:
 
-- `config.yaml`: Nornir configuration
-- `hosts.yaml`: Network device definitions
-- `groups.yaml`: Device group configurations
-- `defaults.yaml`: Default configuration values
+- **Environment Variable**: `NORNIR_INVENTORY_PATH` - Defines the base path for inventory files
+- **Inventory Files** (located at `${NORNIR_INVENTORY_PATH}/`):
+  - `hosts.yaml`: Network device definitions
+  - `groups.yaml`: Device group configurations
+  - `defaults.yaml`: Default configuration values
+
+Configuration is initialized programmatically in the code rather than from external config files.
 
 ## Security Considerations
 
 - Device credentials are managed through Nornir inventory configuration
 - Network connectivity requirements must be satisfied for fact gathering
 - Device access permissions must be properly configured
+- Environment variables should be securely managed in production environments
 
 ## Usage
 
@@ -53,4 +58,4 @@ The server runs as an MCP service and can be connected to by LLM clients that su
 
 ## Development
 
-The project includes a containerlab environment for testing with simulated network devices (router and switch).
+The project includes a containerlab environment for testing with simulated network devices (router and switch). The server can be run with `uv run python main.py` and connects to inventory files specified by the `NORNIR_INVENTORY_PATH` environment variable.

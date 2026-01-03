@@ -12,6 +12,8 @@ The server exposes the following tools:
 Exposes Nornir tools via the Model Context Protocol.
 """
 
+import os
+
 from fastmcp import FastMCP
 from nornir import InitNornir
 from nornir_napalm.plugins.tasks import napalm_get
@@ -28,7 +30,26 @@ def init_nornir():
     """Initialize or return the existing Nornir instance."""
     global _nr_instance
     if _nr_instance is None:
-        _nr_instance = InitNornir(config_file="config.yaml")
+        # Initialize Nornir programmatically without config file
+        _nr_instance = InitNornir(
+            inventory={
+                "plugin": "SimpleInventory",
+                "options": {
+                    "host_file": os.path.expandvars(
+                        "${NORNIR_INVENTORY_PATH}/hosts.yaml"
+                    ),
+                    "group_file": os.path.expandvars(
+                        "${NORNIR_INVENTORY_PATH}/groups.yaml"
+                    ),
+                    "defaults_file": os.path.expandvars(
+                        "${NORNIR_INVENTORY_PATH}/defaults.yaml"
+                    ),
+                },
+            },
+            runner={
+                "plugin": "threaded",
+            },
+        )
     return _nr_instance
 
 

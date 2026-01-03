@@ -1,9 +1,0 @@
-inventory:
-  plugin: SimpleInventory
-  options:
-    host_file: "${NORNIR_INVENTORY_PATH}/hosts.yaml"
-    group_file: "${NORNIR_INVENTORY_PATH}/groups.yaml"
-    defaults_file: "${NORNIR_INVENTORY_PATH}/defaults.yaml"
-
-runner:
-  plugin: threaded

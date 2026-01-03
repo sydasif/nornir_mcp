@@ -5,7 +5,10 @@
             "args": [
                 "run",
                 "main.py"
-            ]
+            ],
+            "env": {
+                "NORNIR_INVENTORY_PATH": "/opt/inventory"
+            }
         }
     }
 }

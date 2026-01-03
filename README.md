@@ -25,6 +25,8 @@ The server uses:
 
 ## Installation
 
+### Local Development Installation
+
 1. Ensure you have Python 3.11+ installed
 2. Install `uv` package manager if not already installed:
    ```bash
@@ -39,6 +41,23 @@ The server uses:
    ```bash
    source .venv/bin/activate
    ```
+
+### Global Installation from GitHub
+
+To install the Nornir MCP server globally from GitHub:
+
+```bash
+# Install directly from GitHub repository
+uv tool install git+https://github.com/your-username/nornir-mcp.git
+
+# Or using pip
+pip install git+https://github.com/your-username/nornir-mcp.git
+
+# After installation, you can run the server directly:
+nornir-mcp
+```
+
+Replace `your-username/nornir-mcp.git` with the actual GitHub repository URL.
 
 ## Tools
 

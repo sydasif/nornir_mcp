@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-nornir-mcp = "main:main"
+nornir-mcp = "nornir_mcp.main:main"
 
 [tool.uv]
-package = false
+package = true

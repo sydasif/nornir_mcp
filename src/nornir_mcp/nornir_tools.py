@@ -16,7 +16,7 @@ The server exposes the following tools:
 
 from nornir_napalm.plugins.tasks import napalm_get
 
-from nornir_init import init_nornir
+from .nornir_init import init_nornir
 
 
 def list_all_hosts() -> str:

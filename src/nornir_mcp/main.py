@@ -8,7 +8,7 @@ The actual implementation is split between:
 
 from fastmcp import FastMCP
 
-from nornir_tools import get_device_facts, list_all_hosts
+from .nornir_tools import get_device_facts, list_all_hosts
 
 # Initialize the FastMCP server
 mcp = FastMCP("nornir-mcp")

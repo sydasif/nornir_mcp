@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "nornir-tools": {
+            "command": "uv",
+            "args": [
+                "run",
+                "main.py"
+            ]
+        }
+    }
+}

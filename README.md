@@ -24,11 +24,11 @@ The server uses:
 
 ## Tools
 
-### `list_hosts()`
+### `list_all_hosts()`
 
 Lists all hosts defined in the Nornir inventory with their names, IP addresses, and platforms.
 
-### `get_network_facts(target_host: str = None)`
+### `get_device_facts(target_host: str = None)`
 
 Gathers device facts from network equipment using NAPALM. Can target a specific device or retrieve facts from all available devices.
 

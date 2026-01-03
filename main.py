@@ -1,5 +1,14 @@
 """MCP server for Nornir network automation.
 
+This module implements a Model Context Protocol (MCP) server that exposes
+Nornir network automation capabilities to LLMs. It provides standardized
+tools for network device discovery, fact gathering, and configuration
+management through the MCP interface.
+
+The server exposes the following tools:
+- list_all_hosts: Lists all network devices in the Nornir inventory
+- get_device_facts: Retrieves detailed device information using NAPALM
+
 Exposes Nornir tools via the Model Context Protocol.
 """
 
@@ -8,10 +17,10 @@ from nornir import InitNornir
 from nornir_napalm.plugins.tasks import napalm_get
 
 # Initialize the FastMCP server
-# The name "nornir-mcp" identifies this server to the LLM
 mcp = FastMCP("nornir-mcp")
 
-# Global Nornir instance (initialized lazily)
+# Global Nornir instance to maintain connection across requests
+# This singleton pattern ensures we don't reinitialize Nornir on each tool call
 _nr_instance = None
 
 
@@ -24,7 +33,7 @@ def init_nornir():
 
 
 @mcp.tool()
-def list_hosts() -> str:
+def list_all_hosts() -> str:
     """List all hosts defined in the Nornir inventory.
 
     Returns:
@@ -95,6 +104,12 @@ def get_device_facts(target_host: str = None) -> str:
 
 # Main entry point for the server
 def main():
+    """Start the Nornir MCP server.
+
+    This function runs the FastMCP server which exposes Nornir network automation
+    tools to LLMs through the Model Context Protocol. The server will continue
+    running until terminated by the user.
+    """
     mcp.run()
 
 

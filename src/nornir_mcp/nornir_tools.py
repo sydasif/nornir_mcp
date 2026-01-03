@@ -1,18 +1,4 @@
-"""Nornir tools module for Nornir network automation.
-
-This module contains the tool definitions for the Model Context Protocol (MCP) server
-that exposes Nornir network automation capabilities to LLMs. It provides standardized
-tools for network device discovery, fact gathering, and configuration
-management through the MCP interface.
-
-This module is part of the refactored architecture that separates concerns:
-- nornir_init.py: Handles Nornir initialization and instance management
-- nornir_tools.py: Contains tool definitions
-
-The server exposes the following tools:
-- list_all_hosts: Lists all network devices in the Nornir inventory
-- get_device_facts: Retrieves detailed device information using NAPALM
-"""
+"""Nornir tools module for Model Context Protocol (MCP) server."""
 
 from nornir_napalm.plugins.tasks import napalm_get
 
@@ -20,11 +6,8 @@ from .nornir_init import init_nornir
 
 
 def list_all_hosts() -> str:
-    """List all hosts defined in the Nornir inventory.
+    """List all hosts in the inventory."""
 
-    Returns:
-        A formatted string containing host names, IPs, and platforms.
-    """
     try:
         nr = init_nornir()
         output = ["Available Hosts:"]
@@ -42,26 +25,16 @@ def list_all_hosts() -> str:
 
 
 def get_device_facts(target_host: str = None) -> str:
-    """Gather device facts (model, serial, OS version) using NAPALM.
-
-    Args:
-        target_host: Optional specific hostname to query.
-                     If None, queries all hosts in the inventory.
-
-    Returns:
-        A formatted string containing device facts.
-    """
+    """Get device facts for a specific host or all hosts."""
     try:
         nr = init_nornir()
 
-        # Filter inventory if a specific host is requested
         if target_host:
             nr = nr.filter(name=target_host)
 
         if not nr.inventory.hosts:
             return f"No hosts found matching criteria: {target_host}"
 
-        # Run the NAPALM task
         result = nr.run(task=napalm_get, getters=["facts"])
 
         summary = []

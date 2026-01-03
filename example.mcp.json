@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "nornir-tool": {
+            "type": "stdio",
+            "command": "nornir-mcp",
+            "args": [],
+            "env": {
+                "NORNIR_INVENTORY_PATH": "/opt/inventory"
+            }
+        }
+    }
+}

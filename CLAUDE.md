@@ -15,7 +15,9 @@ The Nornir MCP Server is an implementation of the Model Context Protocol (MCP) t
 
 ## Code Structure
 
-- `main.py`: Main application file containing MCP tools implementation with programmatic Nornir initialization
+- `main.py`: Main application entry point that imports from other modules
+- `nornir_init.py`: Handles Nornir initialization and instance management
+- `mcp_server.py`: Contains MCP server implementation and tool definitions
 - `.mcp.json`: MCP server configuration including environment variables
 - `pyproject.toml`: Project dependencies and metadata
 - `README.md`: Project documentation

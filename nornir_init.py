@@ -10,8 +10,8 @@ This module is part of the refactored architecture that separates concerns:
 """
 
 import os
-from nornir import InitNornir
 
+from nornir import InitNornir
 
 # Global Nornir instance to maintain connection across requests
 # This singleton pattern ensures we don't reinitialize Nornir on each tool call

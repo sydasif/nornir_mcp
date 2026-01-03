@@ -1,29 +1,24 @@
-"""MCP server module for Nornir network automation.
+"""Nornir tools module for Nornir network automation.
 
-This module implements the Model Context Protocol (MCP) server that exposes
-Nornir network automation capabilities to LLMs. It provides standardized
+This module contains the tool definitions for the Model Context Protocol (MCP) server
+that exposes Nornir network automation capabilities to LLMs. It provides standardized
 tools for network device discovery, fact gathering, and configuration
 management through the MCP interface.
 
 This module is part of the refactored architecture that separates concerns:
 - nornir_init.py: Handles Nornir initialization and instance management
-- mcp_server.py: Contains MCP server implementation and tool definitions
+- nornir_tools.py: Contains tool definitions
 
 The server exposes the following tools:
 - list_all_hosts: Lists all network devices in the Nornir inventory
 - get_device_facts: Retrieves detailed device information using NAPALM
 """
 
-from fastmcp import FastMCP
 from nornir_napalm.plugins.tasks import napalm_get
-from .nornir_init import init_nornir
+
+from nornir_init import init_nornir
 
 
-# Initialize the FastMCP server
-mcp = FastMCP("nornir-mcp")
-
-
-@mcp.tool()
 def list_all_hosts() -> str:
     """List all hosts defined in the Nornir inventory.
 
@@ -46,7 +41,6 @@ def list_all_hosts() -> str:
         return f"Error listing hosts: {str(e)}"
 
 
-@mcp.tool()
 def get_device_facts(target_host: str = None) -> str:
     """Gather device facts (model, serial, OS version) using NAPALM.
 
@@ -91,18 +85,3 @@ def get_device_facts(target_host: str = None) -> str:
 
     except Exception as e:
         return f"Error getting facts: {str(e)}"
-
-
-# Main entry point for the server
-def main():
-    """Start the Nornir MCP server.
-
-    This function runs the FastMCP server which exposes Nornir network automation
-    tools to LLMs through the Model Context Protocol. The server will continue
-    running until terminated by the user.
-    """
-    mcp.run()
-
-
-if __name__ == "__main__":
-    main()

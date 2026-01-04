@@ -74,8 +74,14 @@ def get_device_facts(target_host: str = None) -> str:
             return f"No hosts found matching criteria: {target_host}"
 
         result = nr.run(task=napalm_get, getters=["facts"])
+        facts = {}
+        for host, task_result in result.items():
+            if task_result.failed:
+                facts = f"Host: {host} - FAILED to get facts"
+            else:
+                facts = task_result.result["facts"]
 
-        return result
+        return facts
 
     except Exception as e:
         return f"Error getting facts: {str(e)}"

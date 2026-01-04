@@ -28,6 +28,7 @@ The server exposes these primary tools:
 
 1. `list_all_hosts()`: Lists all network devices in the Nornir inventory with names, IP addresses, and platforms
 2. `get_device_facts(target_host: str = None)`: Retrieves detailed device information (model, serial, OS version, vendor, etc.) using NAPALM
+3. `get_device_health(target_host: str = None)`: Analyzes device health (CPU, Memory, Errors) and returns a scored report with 0-100 health score
 
 ## Development Commands
 
@@ -63,6 +64,7 @@ The server uses programmatic Nornir initialization without external config files
   - `defaults.yaml`: Default configuration values
 
 The `NORNIR_INVENTORY_PATH` environment variable is configured in `.mcp.json`:
+
 ```json
 {
     "env": {

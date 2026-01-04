@@ -1,16 +1,25 @@
 """Nornir tools module for Model Context Protocol (MCP) server.
 
 This module provides the core network automation tools exposed by the
-MCP server. It includes functionality for device discovery and fact
-gathering using the NAPALM library for standardized network device
-interactions.
+MCP server. It includes functionality for device discovery, fact
+gathering, and health monitoring using the NAPALM library for
+standardized network device interactions.
+
+The module provides these primary tools:
+1. `list_all_hosts()`: Lists all network devices in the Nornir inventory
+   with names, IP addresses, and platforms
+2. `get_device_facts(target_host: str = None)`: Retrieves detailed device
+   information (model, serial, OS version, vendor, etc.) using NAPALM
+3. `get_device_health(target_host: str = None)`: Analyzes device health
+   (CPU, Memory, Errors) and returns a scored report with 0-100 health score
 """
 
 import json
-
 from nornir_napalm.plugins.tasks import napalm_get
 
 from .nornir_init import init_nornir
+# Import the logic from the new file
+from .health_monitor import health_check_task
 
 
 def list_all_hosts() -> str:
@@ -91,3 +100,47 @@ def get_device_facts(target_host: str = None) -> str:
 
     except Exception as e:
         return f"Error getting facts: {str(e)}"
+
+
+def get_device_health(target_host: str = None) -> str:
+    """Analyze device health (CPU, Memory, Errors) and return a scored report.
+
+    Performs a health check on network devices by analyzing memory usage,
+    CPU temperature, and interface errors. Returns a 0-100 score.
+
+    Args:
+        target_host (str, optional): Specific hostname to query.
+            If None, checks all hosts.
+
+    Returns:
+        str: JSON string containing health reports.
+    """
+    try:
+        nr = init_nornir()
+
+        if target_host:
+            nr = nr.filter(name=target_host)
+
+        if not nr.inventory.hosts:
+            return f"No hosts found matching criteria: {target_host}"
+
+        # Run the task imported from health_monitor.py
+        result = nr.run(task=health_check_task)
+
+        final_report = {}
+
+        for host, task_result in result.items():
+            if task_result.failed:
+                # Capture the error traceback
+                final_report[host] = {
+                    "status": "failed",
+                    "error": str(task_result.exception)
+                }
+            else:
+                # The task returns the report dictionary directly
+                final_report[host] = task_result[0].result
+
+        return json.dumps(final_report, indent=2)
+
+    except Exception as e:
+        return json.dumps({"error": f"Error calculating health: {str(e)}"})

@@ -6,6 +6,8 @@ gathering using the NAPALM library for standardized network device
 interactions.
 """
 
+import json
+
 from nornir_napalm.plugins.tasks import napalm_get
 
 from .nornir_init import init_nornir
@@ -19,24 +21,27 @@ def list_all_hosts() -> str:
     available network infrastructure for LLMs to understand the topology.
 
     Returns:
-        str: Formatted string containing available hosts with name, IP,
+        str: JSON string containing available hosts with name, IP,
             and platform information. Returns error message if inventory
             access fails.
     """
     try:
         nr = init_nornir()
-        output = ["Available Hosts:"]
+        hosts_data = {}
 
         if not nr.inventory.hosts:
-            return "No hosts found in inventory."
+            return json.dumps({})
 
         for host in nr.inventory.hosts.values():
-            output.append(
-                f"- Name: {host.name}, IP: {host.hostname}, Platform: {host.platform}"
-            )
-        return "\n".join(output)
+            hosts_data[host.name] = {
+                "name": host.name,
+                "ip": host.hostname,
+                "platform": host.platform,
+            }
+
+        return json.dumps(hosts_data, indent=2)
     except Exception as e:
-        return f"Error listing hosts: {str(e)}"
+        return json.dumps({"error": f"Error listing hosts: {str(e)}"})
 
 
 def get_device_facts(target_host: str = None) -> str:
@@ -56,7 +61,7 @@ def get_device_facts(target_host: str = None) -> str:
             facts for all hosts in inventory are retrieved.
 
     Returns:
-        str: Formatted string containing device facts for the specified
+        str: JSON string containing device facts for the specified
             host(s). Returns error message if fact gathering fails.
 
     Security Considerations:
@@ -74,14 +79,15 @@ def get_device_facts(target_host: str = None) -> str:
             return f"No hosts found matching criteria: {target_host}"
 
         result = nr.run(task=napalm_get, getters=["facts"])
-        facts = {}
+        all_facts = {}
+
         for host, task_result in result.items():
             if task_result.failed:
-                facts = f"Host: {host} - FAILED to get facts"
+                all_facts[host] = {"error": "Failed to get facts"}
             else:
-                facts = task_result.result["facts"]
+                all_facts[host] = task_result.result["facts"]
 
-        return facts
+        return json.dumps(all_facts, indent=2, default=str)
 
     except Exception as e:
         return f"Error getting facts: {str(e)}"

@@ -75,24 +75,7 @@ def get_device_facts(target_host: str = None) -> str:
 
         result = nr.run(task=napalm_get, getters=["facts"])
 
-        summary = []
-        for host, task_result in result.items():
-            if task_result.failed:
-                summary.append(f"Host: {host} - FAILED to get facts")
-            else:
-                # Extract data from NAPALM result
-                facts = task_result.result["facts"]
-                summary.append(
-                    f"Host: {facts['hostname']}\n"
-                    f"  - Model: {facts['model']}\n"
-                    f"  - Serial: {facts['serial_number']}\n"
-                    f"  - OS Version: {facts['os_version']}\n"
-                    f"  - Vendor: {facts['vendor']}\n"
-                    f"  - Uptime (seconds): {facts['uptime']}\n"
-                    f"  - Interfaces: {', '.join(facts['interface_list'])}"
-                )
-
-        return "\n".join(summary)
+        return result
 
     except Exception as e:
         return f"Error getting facts: {str(e)}"

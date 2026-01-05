@@ -35,3 +35,7 @@ def main():
         None: This function runs the MCP server which blocks indefinitely.
     """
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

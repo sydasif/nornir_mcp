@@ -68,8 +68,8 @@ Gathers device data from network equipment using NAPALM. Can target a specific d
 **Parameters:**
 
 - `target_host` (str, optional): Specific hostname to query. If None, queries all hosts in the inventory.
-- `getters` (list[str], optional): List of NAPALM getters to run. Defaults to `["facts"]`.
-  - Supported getters: `facts`, `interfaces`, `interfaces_ip`, `bgp_neighbors`, `lldp_neighbors`, `arp_table`, `mac_address_table`, `environment`
+- `getters` (list[str] | str, optional): List of NAPALM getters to run or a JSON string representation of the list. Defaults to `["facts"]`.
+  - Supported getters: `facts`, `interfaces`, `interfaces_ip`, `arp_table`, `mac_address_table`
 
 **Example usage:**
 

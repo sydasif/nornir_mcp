@@ -13,16 +13,12 @@ from nornir_napalm.plugins.tasks import napalm_get
 from .constants import ALLOWED_GETTERS
 from .nornir_init import get_nornir
 
-
 NapalmGetter = Literal[
     "facts",
     "interfaces",
     "interfaces_ip",
-    "bgp_neighbors",
-    "lldp_neighbors",
     "arp_table",
     "mac_address_table",
-    "environment",
 ]
 
 

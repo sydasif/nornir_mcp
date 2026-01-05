@@ -5,6 +5,7 @@ are designed to be registered as MCP tools to expose Nornir automation capabilit
 to LLMs.
 """
 
+import json
 from typing import Literal
 
 from nornir_napalm.plugins.tasks import napalm_get
@@ -58,7 +59,7 @@ def list_all_hosts():
 
 def get_device_data(
     target_host: str | None = None,
-    getters: list[NapalmGetter] | None = None,
+    getters: list[NapalmGetter] | str | None = None,
 ):
     """Collect data from network devices using NAPALM getters.
 
@@ -68,8 +69,9 @@ def get_device_data(
     Args:
         target_host (str | None): The name of a specific host to query. If None,
             queries all hosts in the inventory.
-        getters (list[str] | None): A list of NAPALM getters to execute (e.g.,
-            ['facts', 'interfaces']). Defaults to ['facts'] if not specified.
+        getters (list[str] | str | None): A list of NAPALM getters to execute (e.g.,
+            ['facts', 'interfaces']) or a JSON string representation of the list.
+            Defaults to ['facts'] if not specified.
             See ALLOWED_GETTERS for the full list of supported getters.
 
     Returns:
@@ -87,6 +89,16 @@ def get_device_data(
                 "error": "no_hosts",
                 "message": f"No hosts found for target: {target_host}",
             }
+
+        # Parse string getters if necessary
+        if isinstance(getters, str):
+            try:
+                getters = json.loads(getters)
+            except json.JSONDecodeError:
+                return {
+                    "error": "invalid_format",
+                    "message": "getters must be a list or a valid JSON string of a list",
+                }
 
         # Default getter
         if not getters:

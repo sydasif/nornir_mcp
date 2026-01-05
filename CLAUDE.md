@@ -1,85 +1,80 @@
-# CLAUDE.local.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-The Nornir MCP Server is an implementation of the Model Context Protocol (MCP) that exposes Nornir network automation capabilities to LLMs. It allows AI models to interact with network devices through standardized tools for device discovery, fact gathering, and configuration management.
+Nornir MCP Server is a Model Context Protocol (MCP) server that bridges the gap between Large Language Models (LLMs) and network automation. It leverages Nornir and NAPALM to allow AI assistants to interact directly with network devices, query inventory, and retrieve real-time operational data through a standardized interface.
 
 ## Architecture
 
-- **FastMCP**: Provides the Model Context Protocol implementation
-- **Nornir**: Network automation framework for managing network device connections
-- **NAPALM**: Used for device interaction and fact gathering from network equipment
-- **Containerlab**: Used for network device simulation in development environments
+The project follows a modular design with these key components:
 
-## Code Structure
+- **FastMCP**: Handles the Model Context Protocol communication
+- **Nornir**: Manages inventory, concurrency, and device connections
+- **NAPALM**: Provides a unified driver layer to interact with various network operating systems
 
-- `main.py`: Main application entry point that registers tools and resources
-- `nornir_init.py`: Handles Nornir initialization and instance management
-- `tools.py`: Contains tool definitions for network automation
-- `resources.py`: Contains resource definitions
-- `constants.py`: Shared constants and definitions
-- `.mcp.json`: MCP server configuration including environment variables
-- `pyproject.toml`: Project dependencies and metadata
-- `README.md`: Project documentation
+### Core Files
+- `src/nornir_mcp/main.py`: Entry point that registers tools and resources with the MCP server
+- `src/nornir_mcp/tools.py`: Contains the core tool definitions (`list_all_hosts` and `get_device_data`)
+- `src/nornir_mcp/nornir_init.py`: Handles Nornir initialization with caching using `@lru_cache`
+- `src/nornir_mcp/constants.py`: Defines allowed NAPALM getters
+- `src/nornir_mcp/resources.py`: Provides resource endpoints for MCP
 
-## MCP Tools
+## Available Tools
 
-The server exposes these primary tools:
+### 1. `list_all_hosts`
+Retrieves a summary of the entire Nornir inventory, including hostnames, IP addresses, and platform types.
 
-1. `list_all_hosts()`: Lists all network devices in the Nornir inventory with names, IP addresses, and platforms
-2. `get_device_data(target_host: str = None, getters: list[str] = None)`: Retrieves detailed device information (model, serial, OS version, vendor, etc.) using NAPALM
-
-## Development Commands
-
-### Environment Setup
-
-```bash
-# Using uv for package management
-uv sync
-uv run python main.py
-```
-
-### Linting and Formatting
-
-```bash
-uv run ruff check . --fix
-uv run ruff format .
-```
-
-### Running the Server
-
-```bash
-uv run python main.py
-```
+### 2. `get_device_data`
+Collects detailed operational data from devices using NAPALM getters:
+- `facts`: Basic device information
+- `interfaces`: Interface state and speed
+- `interfaces_ip`: IP addressing per interface
+- `arp_table`: ARP entries
+- `mac_address_table`: MAC address table
 
 ## Configuration
 
-The server uses programmatic Nornir initialization without external config files, using:
+The server requires a standard Nornir `config.yaml` file and locates it via:
+1. Environment variable: `NORNIR_CONFIG_FILE` (absolute path)
+2. Local file: `config.yaml` in the current working directory
 
-- Environment variable: `NORNIR_INVENTORY_PATH` - Defines the base path for inventory files
-- Inventory files (located at `${NORNIR_INVENTORY_PATH}/`):
-  - `hosts.yaml`: Network device definitions
-  - `groups.yaml`: Device group configurations
-  - `defaults.yaml`: Default configuration values
+## Development Commands
 
-The `NORNIR_INVENTORY_PATH` environment variable is configured in `.mcp.json`:
-```json
-{
-    "env": {
-        "NORNIR_INVENTORY_PATH": "/opt/inventory"
-    }
-}
+### Setup and Management
+```bash
+# Install dependencies using uv (recommended)
+uv sync
+
+# Install in development mode
+uv build
+uv install -e .
+
+# Run the application
+uv run nornir-mcp
 ```
 
-## Development Environment
+### Code Quality
+```bash
+# Lint with Ruff
+uv run ruff check .
+uv run ruff check . --fix
 
-The project connects to network inventory files specified by the `NORNIR_INVENTORY_PATH` environment variable.
+# Format with Ruff
+uv run ruff format .
 
-## Security Considerations
+# Run any tests (if present)
+uv run pytest
+```
 
-- Device credentials are managed through Nornir inventory configuration
-- Network connectivity requirements must be satisfied for fact gathering
-- Device access permissions must be properly configured
-- Environment variables should be securely managed in production environments
+### Python Version
+- The project uses Python 3.11 (as specified in `.python-version`)
+- Dependencies are managed with `uv` as per `pyproject.toml`
+
+## Key Patterns
+
+- Uses `@lru_cache(maxsize=1)` for singleton Nornir initialization in `nornir_init.py`
+- Implements error handling with specific error types in tool functions
+- Validates input parameters and returns structured error responses
+- Follows a read-only design approach to prevent accidental configuration changes

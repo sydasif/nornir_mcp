@@ -17,7 +17,7 @@ def _get_nornir_cached(config_file: str | None = None) -> Nornir:
     try:
         # Priority 1: Configuration file argument or environment variable
         cfg_path = config_file or os.getenv("NORNIR_CONFIG_FILE")
-        
+
         # Priority 2: Default config.yaml in current directory
         if not cfg_path:
             default_cfg = "config.yaml"
@@ -31,10 +31,12 @@ def _get_nornir_cached(config_file: str | None = None) -> Nornir:
             )
 
         if not os.path.exists(cfg_path):
-            raise FileNotFoundError(f"Nornir configuration file not found at: {cfg_path}")
+            raise FileNotFoundError(
+                f"Nornir configuration file not found at: {cfg_path}"
+            )
 
         return InitNornir(config_file=cfg_path)
-        
+
     except Exception as e:
         raise RuntimeError(f"Failed to initialize Nornir: {e}") from e
 

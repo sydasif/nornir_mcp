@@ -5,10 +5,24 @@ are designed to be registered as MCP tools to expose Nornir automation capabilit
 to LLMs.
 """
 
+from typing import Literal
+
 from nornir_napalm.plugins.tasks import napalm_get
 
 from .constants import ALLOWED_GETTERS
 from .nornir_init import get_nornir
+
+
+NapalmGetter = Literal[
+    "facts",
+    "interfaces",
+    "interfaces_ip",
+    "bgp_neighbors",
+    "lldp_neighbors",
+    "arp_table",
+    "mac_address_table",
+    "environment",
+]
 
 
 def list_all_hosts():
@@ -44,7 +58,7 @@ def list_all_hosts():
 
 def get_device_data(
     target_host: str | None = None,
-    getters: list[str] | None = None,
+    getters: list[NapalmGetter] | None = None,
 ):
     """Collect data from network devices using NAPALM getters.
 

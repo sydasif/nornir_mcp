@@ -11,6 +11,7 @@ interfaces for network automation tasks.
 
 from nornir_napalm.plugins.tasks import napalm_get
 
+from .mcp_app import mcp
 from .nornir_init import init_nornir
 
 # Supported NAPALM getters with descriptions
@@ -27,6 +28,12 @@ ALLOWED_GETTERS = {
 }
 
 
+@mcp.resource
+def napalm_getters():
+    return {"napalm_getters": ALLOWED_GETTERS}
+
+
+@mcp.tool
 def list_all_hosts():
     try:
         nr = init_nornir()
@@ -49,13 +56,7 @@ def list_all_hosts():
         return {"error": "inventory_error", "message": str(e)}
 
 
-def napalm_getters():
-    """
-    MCP resource: list supported NAPALM getters.
-    """
-    return {"napalm_getters": ALLOWED_GETTERS}
-
-
+@mcp.tool
 def get_device_data(
     target_host: str | None = None,
     getters: list[str] | None = None,

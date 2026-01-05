@@ -113,15 +113,17 @@ def get_device_data(
 
         data = {}
         for host, task_result in result.items():
-            # Fix: task_result is a MultiResult (list-like).
-            # We must access index 0 to get the actual Result object.
-            if task_result.failed:
+            # task_result is a MultiResult (list-like container)
+            # Access [0] to get the actual Result object
+            actual_result = task_result[0]
+
+            if actual_result.failed:
                 data[host] = {
                     "error": "napalm_failed",
-                    "message": str(task_result[0].exception),
+                    "message": str(actual_result.exception),
                 }
             else:
-                data[host] = task_result[0].result
+                data[host] = actual_result.result
 
         return {
             "target": target_host or "all",

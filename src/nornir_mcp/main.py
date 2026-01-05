@@ -9,7 +9,7 @@ from .nornir_tools import (
 mcp = FastMCP("nornir-mcp")
 
 # Resources
-mcp.resource("napalm_getters")(napalm_getters)
+mcp.resource()(napalm_getters)
 
 # Tools
 mcp.tool()(list_all_hosts)

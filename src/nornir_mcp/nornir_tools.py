@@ -81,7 +81,7 @@ def get_device_data(
             getters = ["facts"]
 
         # Validate getters
-        invalid = set(getters) - ALLOWED_GETTERS
+        invalid = set(getters) - ALLOWED_GETTERS.keys()
         if invalid:
             return {
                 "error": "invalid_getters",

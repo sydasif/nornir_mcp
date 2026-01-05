@@ -5,7 +5,7 @@
             "command": "nornir-mcp",
             "args": [],
             "env": {
-                "NORNIR_INVENTORY_PATH": "/opt/inventory"
+                "NORNIR_CONFIG_FILE": "/opt/nornir/config.yaml"
             }
         }
     }

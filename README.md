@@ -9,10 +9,10 @@ This project provides an MCP server that exposes Nornir network automation capab
 ## Features
 
 - **Host Listing**: Retrieve information about all configured network hosts
-- **Device Data Collection**: Gather comprehensive device information (facts, interfaces, environment, etc.) using NAPALM
+- **Device Data Collection**: Gather comprehensive device information (facts, interfaces, ARP, etc.) using NAPALM
 - **Targeted Queries**: Query specific devices or all devices in the inventory
 - **Network Automation**: Provides programmatic access to network infrastructure
-- **Environment Variable Configuration**: Uses environment variables for inventory path configuration
+- **Standardized Configuration**: Uses standard Nornir configuration files for predictable behavior
 
 ## Architecture
 
@@ -25,9 +25,9 @@ The server follows a modular architecture:
 ### Code Structure
 
 - `main.py`: Entry point that initializes the server and explicitly registers tools and resources.
-- `tools.py`: Pure Python functions implementing the automation logic (independent of the MCP framework).
+- `tools.py`: Pure Python functions implementing the automation logic.
 - `resources.py`: Pure Python functions defining data resources.
-- `nornir_init.py`: Thread-safe singleton initialization of the Nornir instance.
+- `nornir_init.py`: Thread-safe singleton initialization of the Nornir instance using configuration files.
 
 ## Installation
 
@@ -43,103 +43,120 @@ uv tool install git+https://github.com/sydasif/nornir_mcp.git
 pip install git+https://github.com/sydasif/nornir_mcp.git
 ```
 
-Replace `username/nornir-mcp.git` with the actual GitHub repository URL.
+## Configuration
 
-## Tools
+The server requires a standard Nornir configuration file (`config.yaml`) to initialize. It looks for the configuration in the following order:
 
-### `list_all_hosts()`
+1.  **Environment Variable**: `NORNIR_CONFIG_FILE` - Set this to the absolute path of your `config.yaml`.
+2.  **Local File**: A file named `config.yaml` in the current working directory where the server is started.
+
+### Claude Desktop Configuration
+
+You can add the server to Claude using the CLI:
+
+```bash
+claude mcp add nornir-tool --scope user -- nornir-mcp
+```
+
+Or manually add it to your `claude.json` or `.mcp.json` with the `NORNIR_CONFIG_FILE` environment variable:
+
+```json
+{
+  "mcpServers": {
+    "nornir-tool": {
+      "command": "nornir-mcp",
+      "args": [],
+      "env": {
+        "NORNIR_CONFIG_FILE": "/absolute/path/to/your/config.yaml"
+      }
+    }
+  }
+}
+```
+
+### Example Nornir Config (`config.yaml`)
+
+```yaml
+---
+inventory:
+  plugin: SimpleInventory
+  options:
+    host_file: inventory/hosts.yaml
+    group_file: inventory/groups.yaml
+    defaults_file: inventory/defaults.yaml
+runner:
+  plugin: threaded
+  options:
+    num_workers: 20
+```
+
+## Tool Usage
+
+The server exposes two primary tools to the LLM.
+
+### 1. `list_all_hosts`
 
 Lists all hosts defined in the Nornir inventory with their names, IP addresses, and platforms.
 
-**Example usage:**
+**Usage:**
 
 ```bash
 list_all_hosts()
 ```
 
 **Returns:**
+A list of hosts with summary details.
 
-- A formatted string containing host names, IPs, and platforms
+### 2. `get_device_data`
 
-### `get_device_data(target_host: str = None, getters: list[str] = None)`
-
-Gathers device data from network equipment using NAPALM. Can target a specific device and specify which data points to collect.
+Gathers detailed data from network devices using NAPALM getters.
 
 **Parameters:**
 
-- `target_host` (str, optional): Specific hostname to query. If None, queries all hosts in the inventory.
-- `getters` (list[str] | str, optional): List of NAPALM getters to run or a JSON string representation of the list. Defaults to `["facts"]`.
-  - Supported getters: `facts`, `interfaces`, `interfaces_ip`, `arp_table`, `mac_address_table`
+- `target_host` (str, optional): The name of a specific host to query. If omitted, queries **all** hosts.
+- `getters` (list[str] | str, optional): The data to collect. Defaults to `["facts"]`.
+  - Can be a list: `["facts", "interfaces"]`
+  - Can be a JSON string: `'["facts", "interfaces"]'` (Useful for clients that struggle with array inputs)
 
-**Example usage:**
+**Supported Getters:**
 
-```bash
-get_device_data()                                     # Get basic facts for all devices
-get_device_data(target_host="R1")                     # Get basic facts for R1
-get_device_data(target_host="R1", getters=["interfaces"]) # Get interface data for R1
-```
+- `facts`: Basic device info (Model, OS, Serial, Uptime)
+- `interfaces`: Interface status, speed, MTU, MAC
+- `interfaces_ip`: IP addresses configured on interfaces
+- `arp_table`: ARP cache entries
+- `mac_address_table`: MAC address table entries
 
-**Returns:**
+**Examples:**
 
-- A dictionary containing the query results per device.
+- **Get basic facts for all devices:**
 
-## Usage
+    ```python
+    get_device_data()
+    ```
 
-### Connecting to the Server
+- **Get facts for a specific router:**
 
-The server runs as an MCP service and can be connected to by LLM clients that support the MCP protocol.
+    ```python
+    get_device_data(target_host="R1")
+    ```
 
-```bash
-# After installation, add the tool to your MCP server:
-claude mcp add nornir-tool --scope <user|local|project> -- nornir-mcp
-```
+- **Get interface details and IP addresses:**
 
-Once connected, the client can invoke the available tools to interact with network devices.
+    ```python
+    get_device_data(target_host="Switch1", getters=["interfaces", "interfaces_ip"])
+    ```
 
-### Configuration
+- **Using JSON string format for getters:**
 
-The server uses programmatic configuration with environment variable expansion:
-
-- **Environment Variable**: `NORNIR_INVENTORY_PATH` - Defines the base path for inventory files
-- **Inventory Files** (located at `${NORNIR_INVENTORY_PATH}/`):
-  - `hosts.yaml`: Network device definitions
-  - `groups.yaml`: Device group configurations
-  - `defaults.yaml`: Default configuration values
-
-Configuration is initialized programmatically in the code rather than from external config files.
-
-### Environment Variable Configuration
-
-Set the `NORNIR_INVENTORY_PATH` environment variable in configuration file as follows:
-
-```json
-{
-    "env": {
-        "NORNIR_INVENTORY_PATH": "/path/to/inventory"
-    }
-}
-```
-
-> Where are MCP servers stored?
->
-> - User and local scope: ~/.claude.json (in the mcpServers field or under project paths)
-> - Project scope: .mcp.json in your project root (checked into source control)
-
-### Testing
-
-To test the tools, you can run the server and connect with an MCP-compatible client. The server has been tested with the following tools:
-
-- `list_all_hosts()`: Successfully returns all configured hosts
-- `get_device_data()`: Successfully retrieves device information for all or specific devices
+    ```python
+    get_device_data(getters='["arp_table", "mac_address_table"]')
+    ```
 
 ## Security Considerations
 
-- Device credentials are managed through Nornir inventory configuration
-- Network connectivity requirements must be satisfied for fact gathering
-- Device access permissions must be properly configured
-- Environment variables should be securely managed in production environments
-- Use secure protocols (SSH/HTTPS) for device communication
-- Regularly rotate device credentials
+- **Credentials**: Device credentials are managed through your Nornir inventory (`defaults.yaml` or `groups.yaml`). Ensure these files are secured with appropriate file permissions.
+- **Connectivity**: The server requires network access to the target devices (SSH/HTTPS).
+- **Read-Only**: The current tools are designed for data retrieval (Getters). No configuration change tools are exposed by default.
 
 ## License
 

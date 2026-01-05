@@ -1,73 +1,79 @@
-"""Nornir tools module for Model Context Protocol (MCP) server.
-
-This module provides the core network automation tools exposed by the
-MCP server. It includes functionality for device discovery and fact
-gathering using the NAPALM library for standardized network device
-interactions.
-"""
-
-import json
-
 from nornir_napalm.plugins.tasks import napalm_get
 
 from .nornir_init import init_nornir
 
 
-def list_all_hosts() -> str:
-    """List all hosts in the inventory.
+def list_all_hosts():
+    """Retrieve all hosts from the Nornir inventory and return their basic information.
 
-    Retrieves and formats information about all network devices in the
-    Nornir inventory. This function provides a high-level overview of
-    available network infrastructure for LLMs to understand the topology.
+    This function initializes Nornir and iterates through all hosts in the inventory,
+    collecting their names, IP addresses, and platform information into a structured
+    dictionary format.
 
     Returns:
-        str: JSON string containing available hosts with name, IP,
-            and platform information. Returns error message if inventory
-            access fails.
+        dict: A dictionary containing hosts information with the following structure:
+            {
+                "hosts": {
+                    "hostname1": {
+                        "name": "hostname1",
+                        "ip": "ip_address",
+                        "platform": "platform_name"
+                    },
+                    ...
+                }
+            }
+            If no hosts are found, returns {"hosts": {}}
+            If an error occurs, returns {"error": "inventory_error", "message": str(e)}
     """
     try:
         nr = init_nornir()
-        hosts_data = {}
 
         if not nr.inventory.hosts:
-            return json.dumps({})
+            return {"hosts": {}}
 
+        hosts = {}
         for host in nr.inventory.hosts.values():
-            hosts_data[host.name] = {
+            hosts[host.name] = {
                 "name": host.name,
                 "ip": host.hostname,
                 "platform": host.platform,
             }
 
-        return json.dumps(hosts_data, indent=2)
+        return {"hosts": hosts}
+
     except Exception as e:
-        return json.dumps({"error": f"Error listing hosts: {str(e)}"})
+        return {
+            "error": "inventory_error",
+            "message": str(e),
+        }
 
 
-def get_device_facts(target_host: str = None) -> str:
-    """Get device facts for a specific host or all hosts.
+def get_device_facts(target_host: str | None = None):
+    """Retrieve NAPALM facts for one or all devices in the Nornir inventory.
 
-    Retrieves detailed device information using NAPALM, including model,
-    serial number, OS version, vendor, uptime, and interface list. This
-    function enables LLMs to access comprehensive device information for
-    network automation tasks.
-
-    The function uses NAPALM's standardized interface to gather facts from
-    network devices, providing consistent data across different vendor
-    platforms.
+    This function gathers detailed device information (such as model, serial number,
+    operating system version, vendor, etc.) using NAPALM from either a specific host
+    or all hosts in the inventory if no target is specified.
 
     Args:
-        target_host (str, optional): Specific hostname to query. If None,
-            facts for all hosts in inventory are retrieved.
+        target_host (str | None, optional): The name of a specific host to get facts for.
+            If None, facts will be retrieved for all hosts in the inventory.
+            Defaults to None.
 
     Returns:
-        str: JSON string containing device facts for the specified
-            host(s). Returns error message if fact gathering fails.
-
-    Security Considerations:
-        - Device credentials are managed through Nornir inventory
-        - Network connectivity and device access permissions required
-        - Sensitive device information is exposed through this function
+        dict: A dictionary containing the target and facts information with the following structure:
+            {
+                "target": "hostname or 'all'",
+                "facts": {
+                    "hostname1": {
+                        # NAPALM facts dictionary
+                    },
+                    ...
+                }
+            }
+            If no hosts are found, returns {"error": "no_hosts", "message": error_message}
+            If NAPALM operation fails, returns {"error": "napalm_failed", "message": str(exception)}
+            If an execution error occurs, returns {"error": "execution_error", "message": str(e)}
     """
     try:
         nr = init_nornir()
@@ -76,18 +82,30 @@ def get_device_facts(target_host: str = None) -> str:
             nr = nr.filter(name=target_host)
 
         if not nr.inventory.hosts:
-            return f"No hosts found matching criteria: {target_host}"
+            return {
+                "error": "no_hosts",
+                "message": f"No hosts found for target: {target_host}",
+            }
 
         result = nr.run(task=napalm_get, getters=["facts"])
-        all_facts = {}
 
+        facts = {}
         for host, task_result in result.items():
             if task_result.failed:
-                all_facts[host] = {"error": "Failed to get facts"}
+                facts[host] = {
+                    "error": "napalm_failed",
+                    "message": str(task_result.exception),
+                }
             else:
-                all_facts[host] = task_result.result["facts"]
+                facts[host] = task_result.result.get("facts", {})
 
-        return json.dumps(all_facts, indent=2, default=str)
+        return {
+            "target": target_host or "all",
+            "facts": facts,
+        }
 
     except Exception as e:
-        return f"Error getting facts: {str(e)}"
+        return {
+            "error": "execution_error",
+            "message": str(e),
+        }

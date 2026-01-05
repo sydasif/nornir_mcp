@@ -56,7 +56,7 @@ The server requires a standard Nornir `config.yaml` file. It locates this config
 
 ## Available Tools
 
-The server exposes two primary capabilities to the LLM:
+The server exposes three primary capabilities to the LLM:
 
 ### 1. `list_all_hosts`
 
@@ -76,6 +76,16 @@ Collects detailed operational data from devices.
 **Example Prompts**:
 > "Get the ARP table and interface IPs for Switch1."
 > "Show me basic facts for all routers in the inventory."
+
+### 3. `reload_nornir_inventory`
+
+Reloads the Nornir inventory from disk without restarting the server.
+
+* **Usage**: `reload_nornir_inventory()`
+* **Use Case**: Call this after editing your inventory files (hosts.yaml, groups.yaml, defaults.yaml) to refresh the device list and configurations.
+
+**Example Prompt**:
+> "I've updated my hosts.yaml file. Please reload the inventory."
 
 ## Security & Testing
 

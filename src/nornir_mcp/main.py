@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 
 from nornir_mcp.constants import ALLOWED_GETTERS
-from nornir_mcp.tools import get_device_data, list_all_hosts
+from nornir_mcp.tools import get_device_data, list_all_hosts, reload_nornir_inventory
 
 
 def main():
@@ -11,6 +11,7 @@ def main():
     # Register tools
     mcp.tool(list_all_hosts)
     mcp.tool(get_device_data)
+    mcp.tool(reload_nornir_inventory)
 
     # Register resource using decorator pattern
     @mcp.resource("nornir://napalm-getters")

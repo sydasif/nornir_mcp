@@ -16,8 +16,8 @@ The project follows a modular design with these key components:
 
 ### Core Files
 - `src/nornir_mcp/main.py`: Entry point that registers tools and resources with the MCP server
-- `src/nornir_mcp/tools.py`: Contains the core tool definitions (`list_all_hosts` and `get_device_data`)
-- `src/nornir_mcp/nornir_init.py`: Handles Nornir initialization with caching using `@lru_cache`
+- `src/nornir_mcp/tools.py`: Contains the core tool definitions (`list_all_hosts`, `get_device_data`, and `reload_nornir_inventory`)
+- `src/nornir_mcp/nornir_init.py`: Handles Nornir initialization with singleton caching using `@lru_cache`
 - `src/nornir_mcp/constants.py`: Defines allowed NAPALM getters
 - `src/nornir_mcp/resources.py`: Provides resource endpoints for MCP
 
@@ -33,6 +33,9 @@ Collects detailed operational data from devices using NAPALM getters:
 - `interfaces_ip`: IP addressing per interface
 - `arp_table`: ARP entries
 - `mac_address_table`: MAC address table
+
+### 3. `reload_nornir_inventory`
+Clears the Nornir cache and forces a reload of inventory files from disk. Use this when you've updated your inventory files without restarting the MCP server.
 
 ## Configuration
 
@@ -75,6 +78,7 @@ uv run pytest
 ## Key Patterns
 
 - Uses `@lru_cache(maxsize=1)` for singleton Nornir initialization in `nornir_init.py`
+- Provides explicit `reload_inventory()` function for cache invalidation
 - Implements error handling with specific error types in tool functions
 - Validates input parameters and returns structured error responses
 - Follows a read-only design approach to prevent accidental configuration changes

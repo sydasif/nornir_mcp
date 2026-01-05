@@ -11,7 +11,7 @@ from typing import Literal
 from nornir_napalm.plugins.tasks import napalm_get
 
 from .constants import ALLOWED_GETTERS
-from .nornir_init import get_nornir
+from .nornir_init import get_nornir, reload_inventory
 
 NapalmGetter = Literal[
     "facts",
@@ -134,5 +134,30 @@ def get_device_data(
     except Exception as e:
         return {
             "error": "execution_error",
+            "message": str(e),
+        }
+
+
+def reload_nornir_inventory():
+    """Reload Nornir inventory from disk.
+
+    This tool clears the Nornir cache and forces a fresh reload of all
+    inventory and configuration files on the next request. Use this when
+    you've updated your inventory files (hosts.yaml, groups.yaml, or
+    defaults.yaml) and want the changes to take effect without restarting
+    the MCP server.
+
+    Returns:
+        dict: A confirmation message indicating the inventory was reloaded.
+    """
+    try:
+        reload_inventory()
+        return {
+            "status": "success",
+            "message": "Nornir inventory cache cleared. Next request will reload from disk.",
+        }
+    except Exception as e:
+        return {
+            "error": "reload_failed",
             "message": str(e),
         }

@@ -1,9 +1,19 @@
-import nornir_mcp.nornir_tools  # IMPORTANT: forces registration
+from fastmcp import FastMCP
 
-from .mcp_app import mcp
+from nornir_mcp.resources import napalm_getters
+from nornir_mcp.tools import get_device_data, list_all_hosts
 
 
 def main():
+    mcp = FastMCP("nornir-mcp")
+
+    # Register tools
+    mcp.tool(list_all_hosts)
+    mcp.tool(get_device_data)
+
+    # Register resources
+    mcp.resource("nornir://napalm-getters")(napalm_getters)
+
     mcp.run()
 
 

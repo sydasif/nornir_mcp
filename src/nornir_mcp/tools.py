@@ -1,42 +1,28 @@
-"""Nornir tools module for Model Context Protocol (MCP) server.
+"""Tools module for Nornir MCP server.
 
-This module provides the core network automation tools that are exposed
-through the MCP server. It includes functions for device discovery,
-fact gathering, and configuration management using the Nornir framework
-and NAPALM library.
-
-The tools enable LLMs to interact with network devices through standardized
-interfaces for network automation tasks.
+This module contains the core tool definitions for the MCP server. These functions
+are designed to be registered as MCP tools to expose Nornir automation capabilities
+to LLMs.
 """
 
 from nornir_napalm.plugins.tasks import napalm_get
 
-from .mcp_app import mcp
-from .nornir_init import init_nornir
-
-# Supported NAPALM getters with descriptions
-# These are the data getters that can be used with the get_device_data function
-ALLOWED_GETTERS = {
-    "facts": "Basic device information",
-    "interfaces": "Interface state and speed",
-    "interfaces_ip": "IP addressing per interface",
-    "bgp_neighbors": "BGP neighbor summary",
-    "lldp_neighbors": "LLDP neighbor discovery",
-    "arp_table": "ARP entries",
-    "mac_address_table": "MAC address table",
-    "environment": "Power, fans, temperature",
-}
+from .constants import ALLOWED_GETTERS
+from .nornir_init import get_nornir
 
 
-@mcp.resource
-def napalm_getters():
-    return {"napalm_getters": ALLOWED_GETTERS}
-
-
-@mcp.tool
 def list_all_hosts():
+    """List all configured network hosts in the inventory.
+
+    Retrieves the list of network devices from the Nornir inventory, including
+    their names, IP addresses, and platforms.
+
+    Returns:
+        dict: A dictionary containing a list of hosts with their details, or
+              an error message if the inventory is empty or inaccessible.
+    """
     try:
-        nr = init_nornir()
+        nr = get_nornir()
 
         if not nr.inventory.hosts:
             return {"hosts": {}}
@@ -56,17 +42,28 @@ def list_all_hosts():
         return {"error": "inventory_error", "message": str(e)}
 
 
-@mcp.tool
 def get_device_data(
     target_host: str | None = None,
     getters: list[str] | None = None,
 ):
-    """
-    Generic NAPALM data collector with getter selection.
-    """
+    """Collect data from network devices using NAPALM getters.
 
+    Executes specified NAPALM getters against one or all devices in the inventory.
+    Allows filtering by target host and selecting specific data points to retrieve.
+
+    Args:
+        target_host (str | None): The name of a specific host to query. If None,
+            queries all hosts in the inventory.
+        getters (list[str] | None): A list of NAPALM getters to execute (e.g.,
+            ['facts', 'interfaces']). Defaults to ['facts'] if not specified.
+            See ALLOWED_GETTERS for the full list of supported getters.
+
+    Returns:
+        dict: A dictionary containing the query parameters and the results from
+              each device, or error details if the operation failed.
+    """
     try:
-        nr = init_nornir()
+        nr = get_nornir()
 
         if target_host:
             nr = nr.filter(name=target_host)

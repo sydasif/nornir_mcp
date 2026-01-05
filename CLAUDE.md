@@ -15,9 +15,11 @@ The Nornir MCP Server is an implementation of the Model Context Protocol (MCP) t
 
 ## Code Structure
 
-- `main.py`: Main application entry point that contains the MCP server implementation and registers tools
+- `main.py`: Main application entry point that registers tools and resources
 - `nornir_init.py`: Handles Nornir initialization and instance management
-- `nornir_tools.py`: Contains tool definitions for network automation
+- `tools.py`: Contains tool definitions for network automation
+- `resources.py`: Contains resource definitions
+- `constants.py`: Shared constants and definitions
 - `.mcp.json`: MCP server configuration including environment variables
 - `pyproject.toml`: Project dependencies and metadata
 - `README.md`: Project documentation
@@ -27,7 +29,7 @@ The Nornir MCP Server is an implementation of the Model Context Protocol (MCP) t
 The server exposes these primary tools:
 
 1. `list_all_hosts()`: Lists all network devices in the Nornir inventory with names, IP addresses, and platforms
-2. `get_device_facts(target_host: str = None)`: Retrieves detailed device information (model, serial, OS version, vendor, etc.) using NAPALM
+2. `get_device_data(target_host: str = None, getters: list[str] = None)`: Retrieves detailed device information (model, serial, OS version, vendor, etc.) using NAPALM
 
 ## Development Commands
 

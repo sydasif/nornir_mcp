@@ -9,18 +9,25 @@ This project provides an MCP server that exposes Nornir network automation capab
 ## Features
 
 - **Host Listing**: Retrieve information about all configured network hosts
-- **Device Facts**: Gather comprehensive device information (model, serial, OS version, vendor) using NAPALM
+- **Device Data Collection**: Gather comprehensive device information (facts, interfaces, environment, etc.) using NAPALM
 - **Targeted Queries**: Query specific devices or all devices in the inventory
 - **Network Automation**: Provides programmatic access to network infrastructure
 - **Environment Variable Configuration**: Uses environment variables for inventory path configuration
 
 ## Architecture
 
-The server uses:
+The server follows a modular architecture:
 
-- **FastMCP**: For MCP protocol implementation
-- **Nornir**: For network automation framework
-- **NAPALM**: For device interaction and fact gathering
+- **FastMCP**: Implementation of the Model Context Protocol using manual tool registration for better control and testability.
+- **Nornir**: Network automation framework managing device connections and inventory.
+- **NAPALM**: Driver layer for unifying interactions with different network operating systems.
+
+### Code Structure
+
+- `main.py`: Entry point that initializes the server and explicitly registers tools and resources.
+- `tools.py`: Pure Python functions implementing the automation logic (independent of the MCP framework).
+- `resources.py`: Pure Python functions defining data resources.
+- `nornir_init.py`: Thread-safe singleton initialization of the Nornir instance.
 
 ## Installation
 
@@ -54,24 +61,27 @@ list_all_hosts()
 
 - A formatted string containing host names, IPs, and platforms
 
-### `get_device_facts(target_host: str = None)`
+### `get_device_data(target_host: str = None, getters: list[str] = None)`
 
-Gathers device facts from network equipment using NAPALM. Can target a specific device or retrieve facts from all available devices.
+Gathers device data from network equipment using NAPALM. Can target a specific device and specify which data points to collect.
 
 **Parameters:**
 
 - `target_host` (str, optional): Specific hostname to query. If None, queries all hosts in the inventory.
+- `getters` (list[str], optional): List of NAPALM getters to run. Defaults to `["facts"]`.
+  - Supported getters: `facts`, `interfaces`, `interfaces_ip`, `bgp_neighbors`, `lldp_neighbors`, `arp_table`, `mac_address_table`, `environment`
 
 **Example usage:**
 
 ```bash
-get_device_facts()              # Get facts for all devices
-get_device_facts(target_host="R1")  # Get facts for specific device
+get_device_data()                                     # Get basic facts for all devices
+get_device_data(target_host="R1")                     # Get basic facts for R1
+get_device_data(target_host="R1", getters=["interfaces"]) # Get interface data for R1
 ```
 
 **Returns:**
 
-- A formatted string containing device facts including model, serial number, OS version, vendor, uptime, and interface list
+- A dictionary containing the query results per device.
 
 ## Usage
 
@@ -120,7 +130,7 @@ Set the `NORNIR_INVENTORY_PATH` environment variable in configuration file as fo
 To test the tools, you can run the server and connect with an MCP-compatible client. The server has been tested with the following tools:
 
 - `list_all_hosts()`: Successfully returns all configured hosts
-- `get_device_facts()`: Successfully retrieves device information for all or specific devices
+- `get_device_data()`: Successfully retrieves device information for all or specific devices
 
 ## Security Considerations
 

@@ -1,24 +1,22 @@
 """Nornir initialization module for Model Context Protocol (MCP) server.
 
-This module handles the initialization of the Nornir framework with a
-singleton pattern to ensure consistent state across the MCP server
-instance. It loads inventory configuration from environment-specified
-paths for hosts, groups, and defaults files.
+This module handles the initialization of the Nornir framework using
+Python's lru_cache to implement the singleton pattern.
 """
 
 import os
+from functools import lru_cache
 
 from nornir import InitNornir
+from nornir.core import Nornir
 
-_nr_instance = None
 
+@lru_cache(maxsize=1)
+def get_nornir() -> Nornir:
+    """Initialize or return the existing Nornir instance.
 
-def init_nornir():
-    """Initialize or return the existing Nornir instance using singleton pattern.
-
-    Creates a singleton Nornir instance that persists across the application
-    lifecycle. This prevents multiple initialization overhead and ensures
-    consistent state when multiple tools access the Nornir framework.
+    Uses functools.lru_cache to implement the singleton pattern, ensuring
+    only one Nornir instance is created and reused.
 
     The function uses environment variables to locate inventory files:
     - NORNIR_INVENTORY_PATH: Base path for inventory configuration files
@@ -26,30 +24,21 @@ def init_nornir():
     Returns:
         nornir.core.Nornir: A configured Nornir instance with SimpleInventory
             plugin and threaded runner.
-
-    Raises:
-        nornir.core.exceptions.NornirNoValidInventoryError: If inventory
-            files are missing or invalid.
     """
-    global _nr_instance
-    if _nr_instance is None:
-        _nr_instance = InitNornir(
-            inventory={
-                "plugin": "SimpleInventory",
-                "options": {
-                    "host_file": os.path.expandvars(
-                        "${NORNIR_INVENTORY_PATH}/hosts.yaml"
-                    ),
-                    "group_file": os.path.expandvars(
-                        "${NORNIR_INVENTORY_PATH}/groups.yaml"
-                    ),
-                    "defaults_file": os.path.expandvars(
-                        "${NORNIR_INVENTORY_PATH}/defaults.yaml"
-                    ),
-                },
+    return InitNornir(
+        inventory={
+            "plugin": "SimpleInventory",
+            "options": {
+                "host_file": os.path.expandvars("${NORNIR_INVENTORY_PATH}/hosts.yaml"),
+                "group_file": os.path.expandvars(
+                    "${NORNIR_INVENTORY_PATH}/groups.yaml"
+                ),
+                "defaults_file": os.path.expandvars(
+                    "${NORNIR_INVENTORY_PATH}/defaults.yaml"
+                ),
             },
-            runner={
-                "plugin": "threaded",
-            },
-        )
-    return _nr_instance
+        },
+        runner={
+            "plugin": "threaded",
+        },
+    )

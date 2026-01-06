@@ -593,15 +593,6 @@ wheels = [
 ]
 
 [[package]]
-name = "invoke"
-version = "2.2.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/de/bd/b461d3424a24c80490313fd77feeb666ca4f6a28c7e72713e3d9095719b4/invoke-2.2.1.tar.gz", hash = "sha256:515bf49b4a48932b79b024590348da22f39c4942dff991ad1fb8b8baea1be707", size = 304762, upload-time = "2025-10-11T00:36:35.172Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/32/4b/b99e37f88336009971405cbb7630610322ed6fbfa31e1d7ab3fbf3049a2d/invoke-2.2.1-py3-none-any.whl", hash = "sha256:2413bc441b376e5cd3f55bb5d364f973ad8bdd7bf87e53c79de3c11bf3feecc8", size = 160287, upload-time = "2025-10-11T00:36:33.703Z" },
-]
-
-[[package]]
 name = "jaraco-classes"
 version = "3.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -702,13 +693,12 @@ wheels = [
 
 [[package]]
 name = "junos-eznc"
-version = "2.7.5"
+version = "2.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
     { name = "lxml" },
     { name = "ncclient" },
-    { name = "paramiko" },
     { name = "pyparsing" },
     { name = "pyserial" },
     { name = "pyyaml" },
@@ -717,9 +707,9 @@ dependencies = [
     { name = "transitions" },
     { name = "yamlordereddictloader" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/a0/54c0ca84bca6233aa25ab01f57117c8fbe1498a05bf85842f1a6c99eb3bf/junos_eznc-2.7.5.tar.gz", hash = "sha256:d7e395669eb94aeed9bca47a157ac87fa2e5489c075225b0878d0e5b77cd00c3", size = 176970, upload-time = "2025-09-23T15:03:26.08Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/c6/0dde3625873312c8a337334f0998491a07dfa71f378f25bf0e0cdd13eb5f/junos-eznc-2.7.1.tar.gz", hash = "sha256:371f0298bf03e0cb4c017c43f6f4122263584eda0d690d0112e93f13daae41ac", size = 169319, upload-time = "2024-04-12T05:59:38.974Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/3c/36a0a265c920e478cec88faab97169cbc39d5d67822fcbd63eed052112cf/junos_eznc-2.7.5-py2.py3-none-any.whl", hash = "sha256:db94074c50227c217a7669b9efad372d11bb354de4985cffcc7295aa2af80919", size = 206884, upload-time = "2025-09-23T15:03:23.637Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/ec/69bb3fe55c1666acd02ef7e1cc403506d3003973096491300b837229d311/junos_eznc-2.7.1-py3-none-any.whl", hash = "sha256:8a7918faa8f0570341cac64c1210c1cd3e3542162d1e7449c3364f8d805716b2", size = 198054, upload-time = "2024-04-12T05:59:36.307Z" },
 ]
 
 [[package]]
@@ -1036,7 +1026,7 @@ wheels = [
 
 [[package]]
 name = "napalm"
-version = "5.1.0"
+version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cffi" },
@@ -1051,26 +1041,27 @@ dependencies = [
     { name = "pyeapi" },
     { name = "pyyaml" },
     { name = "requests" },
+    { name = "scp" },
     { name = "setuptools" },
     { name = "textfsm" },
     { name = "ttp" },
     { name = "ttp-templates" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a0/a4/7c32c22e4862c3e39d344ac82f50ce5e522f3d5edf8eddefa6d92beccaaf/napalm-5.1.0.tar.gz", hash = "sha256:a9f898f38d4af00f3e7c5b3ad291f49773fc0229be0e83967a34f29cab2d50f4", size = 229514, upload-time = "2025-08-05T18:31:07.697Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a9/68/e0de16b384eb70bb4cb87d157c1a6907e34c33e8b85effce156032a82139/napalm-5.0.0.tar.gz", hash = "sha256:350ac3d74f2f10030dbae44d3395551d7e03ee25c65fa5eb8263a4e6f51f2c94", size = 229590, upload-time = "2024-04-10T12:01:24.468Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/a6/c056307436cad842c6b993322e50f72eeddea360346654a83faa4aab5993/napalm-5.1.0-py2.py3-none-any.whl", hash = "sha256:626736ccb185676a02390a8d11798f3ad46b62b0e3160874fee5dbff6901261c", size = 263272, upload-time = "2025-08-05T18:31:05.058Z" },
+    { url = "https://files.pythonhosted.org/packages/85/ca/7e7d4f2b53240a82a8a48b41decc490ca854e6c6c56cfed607ed4d32a840/napalm-5.0.0-py2.py3-none-any.whl", hash = "sha256:458837932e527ca06a4bab7e600b0ca6e6bc3bb4b33fad9c9ef2befc7df6d2f5", size = 263761, upload-time = "2024-04-10T12:01:22.667Z" },
 ]
 
 [[package]]
 name = "ncclient"
-version = "0.7.0"
+version = "0.6.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
     { name = "paramiko" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c2/fb/29dbb4987f81d7932d8018079bf3e6d1d5cce320d7c2c90e84d3c7dba40c/ncclient-0.7.0.tar.gz", hash = "sha256:318e8e3e72b1d2a766f3665cabef33436fd25b607da5f15657a199c648a68435", size = 116221, upload-time = "2025-08-25T15:29:24.172Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/97/07/1b096142f6633e00576f46e52e6c81b5286aee3b0e40ca407fca39d2a434/ncclient-0.6.19.tar.gz", hash = "sha256:de7a796221910cbd0f32eb20f7dd7c94cfe61aa170fc5f0c5941c557f835c312", size = 112648, upload-time = "2025-03-02T18:40:24.047Z" }
 
 [[package]]
 name = "netaddr"
@@ -1130,6 +1121,8 @@ dependencies = [
     { name = "fastmcp" },
     { name = "nornir" },
     { name = "nornir-napalm" },
+    { name = "nornir-netmiko" },
+    { name = "nornir-paramiko" },
 ]
 
 [package.dev-dependencies]
@@ -1142,6 +1135,8 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=2.14.2" },
     { name = "nornir", specifier = ">=3.5.0" },
     { name = "nornir-napalm", specifier = ">=0.5.0" },
+    { name = "nornir-netmiko", specifier = ">=1.0.1" },
+    { name = "nornir-paramiko", specifier = ">=0.3.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1158,6 +1153,32 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d3/84/2f8a21579d23fcef92f217b72b828c7af6d3004791c5286696f267e715e7/nornir_napalm-0.5.0.tar.gz", hash = "sha256:4c95979eebe2475e7b8516411ad8e3205d2ff30e410d1dbdce785a55033d1130", size = 7908, upload-time = "2024-04-13T04:16:40.13Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bf/16/fb7f72cb75adf051ff0049b613c1a2db557772323a70d594b6195549d572/nornir_napalm-0.5.0-py3-none-any.whl", hash = "sha256:1a418bf0f5e38ac65894d474f81b50787dafe0aa1965c4fbd1b86d34d4374418", size = 11971, upload-time = "2024-04-13T04:16:38.621Z" },
+]
+
+[[package]]
+name = "nornir-netmiko"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "netmiko" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/94/00/ddd0b87d3493f7c853798d86f3b37fbb7decc4b5b30bd473e0f4565bc96d/nornir_netmiko-1.0.1.tar.gz", hash = "sha256:498546df001e0e499f10c5646d1356e361ccbb165b1335b89cfe8f19765e24d7", size = 7838, upload-time = "2023-12-07T18:18:34.364Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/16/63764c64087f14b2cd66f205da8570dfc13887ec43aa668de0c55a3ff92b/nornir_netmiko-1.0.1-py3-none-any.whl", hash = "sha256:eaee2944ad386b40c0719e8ac393ac63d531f44fb9a07d660bae7de430f12834", size = 11518, upload-time = "2023-12-07T18:18:33.369Z" },
+]
+
+[[package]]
+name = "nornir-paramiko"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nornir" },
+    { name = "paramiko" },
+    { name = "scp" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/92/c9/ced9762a7045e451ed9ff4eec65b72b40e518e663f93087c544644498e91/nornir_paramiko-0.3.0.tar.gz", hash = "sha256:1f75e97e1ff18280d1861b3e6f4f6a96c6f5c8d023e108dbe033e1f941a77cdf", size = 7651, upload-time = "2023-12-25T15:59:07.154Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/ef/9ca25d36455111c3a616b955c4ddf4d8ffd956b3b87ee351e871cc9e2d46/nornir_paramiko-0.3.0-py3-none-any.whl", hash = "sha256:ade61109cf696f8fad7ee11fb9e8b49c06e4603a0591ab7fef9bdc3274809b6f", size = 9941, upload-time = "2023-12-25T15:59:05.668Z" },
 ]
 
 [[package]]
@@ -1264,17 +1285,17 @@ wheels = [
 
 [[package]]
 name = "paramiko"
-version = "4.0.0"
+version = "2.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bcrypt" },
     { name = "cryptography" },
-    { name = "invoke" },
     { name = "pynacl" },
+    { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/e7/81fdcbc7f190cdb058cffc9431587eb289833bdd633e2002455ca9bb13d4/paramiko-4.0.0.tar.gz", hash = "sha256:6a25f07b380cc9c9a88d2b920ad37167ac4667f8d9886ccebd8f90f654b5d69f", size = 1630743, upload-time = "2025-08-04T01:02:03.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/75/e78ddbe671a4a59514b59bc6a321263118e4ac3fe88175dd784d1a47a00f/paramiko-2.12.0.tar.gz", hash = "sha256:376885c05c5d6aa6e1f4608aac2a6b5b0548b1add40274477324605903d9cd49", size = 1076369, upload-time = "2022-11-04T22:33:03.53Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/90/a744336f5af32c433bd09af7854599682a383b37cfd78f7de263de6ad6cb/paramiko-4.0.0-py3-none-any.whl", hash = "sha256:0e20e00ac666503bf0b4eda3b6d833465a2b7aff2e2b3d79a8bba5ef144ee3b9", size = 223932, upload-time = "2025-08-04T01:02:02.029Z" },
+    { url = "https://files.pythonhosted.org/packages/71/6d/95777fd66507106d2f8f81d005255c237187951644f85a5bd0baeec8a88f/paramiko-2.12.0-py2.py3-none-any.whl", hash = "sha256:b2df1a6325f6996ef55a8789d0462f5b502ea83b3c990cbb5bbe57345c6812c4", size = 213084, upload-time = "2022-11-04T22:33:01.793Z" },
 ]
 
 [[package]]
@@ -1941,14 +1962,14 @@ sdist = { url = "https://files.pythonhosted.org/packages/f7/5d/c589ccf1b86632d21
 
 [[package]]
 name = "scp"
-version = "0.15.0"
+version = "0.14.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "paramiko" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d6/1c/d213e1c6651d0bd37636b21b1ba9b895f276e8057f882c9f944931e4f002/scp-0.15.0.tar.gz", hash = "sha256:f1b22e9932123ccf17eebf19e0953c6e9148f589f93d91b872941a696305c83f", size = 13905, upload-time = "2024-05-23T21:37:41.835Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/50/277f788967eed7aa2cbb669ff91dff90d2232bfda95577515a783bbccf73/scp-0.14.5.tar.gz", hash = "sha256:64f0015899b3d212cb8088e7d40ebaf0686889ff0e243d5c1242efe8b50f053e", size = 12559, upload-time = "2023-01-30T19:31:33.956Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/79/b3/561cd6afa959e9dd522af12acc4f803e8bab1bd0e383bffc5211721c5fcb/scp-0.15.0-py2.py3-none-any.whl", hash = "sha256:9e7f721e5ac563c33eb0831d0f949c6342f1c28c3bdc3b02f39d77b5ea20df7e", size = 8753, upload-time = "2024-05-23T21:37:46.226Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/04/4bcc504e6c2fdcfee7d74a6d14a49db0f129baf2cfa19f61148f333e96b9/scp-0.14.5-py2.py3-none-any.whl", hash = "sha256:d224535dd8ed00294f52b0e0e18fde7a6fb7a3d06b97ede9e3f750fa7bf75c09", size = 8653, upload-time = "2023-01-30T19:31:39.134Z" },
 ]
 
 [[package]]

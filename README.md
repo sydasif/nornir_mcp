@@ -21,14 +21,10 @@ The project follows a scalable, object-oriented design to ensure reliability and
 
 ## Installation
 
-You can install the server globally directly from the repository using `uv` or `pip`:
+You can install the server globally directly from the repository using `uv`:
 
 ```bash
-# Using uv (Recommended)
 uv tool install git+https://github.com/sydasif/nornir_mcp.git
-
-# Using pip
-pip install git+https://github.com/sydasif/nornir_mcp.git
 ```
 
 ## Configuration
@@ -46,7 +42,7 @@ The server requires a standard Nornir `config.yaml` file. It locates this config
 ```json
 {
   "mcpServers": {
-    "nornir-tool": {
+    "nornir-stack": {
       "command": "nornir-mcp",
       "env": {
         "NORNIR_CONFIG_FILE": "/absolute/path/to/your/config.yaml"
@@ -91,7 +87,7 @@ Each of these tools can optionally take a `hostname` argument to target a specif
 
 * **Read-Only Design**: The tools are currently scoped to data retrieval (Getters) to prevent accidental configuration changes.
 * **Credentials**: Ensure your Nornir inventory files (`defaults.yaml` or `groups.yaml`) are secured with appropriate file permissions.
-* **Lab Environment**: To test safely, you can deploy the container lab provided in the [nornir-mcp-lab repository](https://github.com/sydasif/nornir-mcp-lab.git).
+* **Lab Environment**: To test safely, you can deploy the container lab provided in the [nornir-mcp-lab](https://github.com/sydasif/nornir-mcp-lab.git) repository.
 
 ## License
 

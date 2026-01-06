@@ -25,14 +25,14 @@ def main():
     mcp.tool(run_getter)
 
     @mcp.resource("nornir://supported-getters")
-    def supported_getters() -> dict[str, list[str]]:
+    def supported_getters() -> dict[str, dict[str, str]]:
         """Return the list of supported NAPALM getters.
 
         This resource provides a list of valid getter names that can be used with
         the `run_getter` tool.
 
         Returns:
-            dict: A dictionary containing the list of supported getters.
+            dict: A dictionary containing the list of supported getters and their descriptions.
         """
         try:
             current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -42,7 +42,7 @@ def main():
                 data = json.load(f)
             return data
         except Exception:
-            return {"supported_getters": []}
+            return {"supported_getters": {}}
 
     mcp.run()
 

@@ -6,6 +6,7 @@ tools for network automation tasks.
 
 from fastmcp import FastMCP
 
+from nornir_mcp.runners.napalm_runner import NapalmRunner
 from nornir_mcp.tools import (
     list_all_hosts,
     reload_nornir_inventory,
@@ -20,6 +21,18 @@ def main():
     mcp.tool(list_all_hosts)
     mcp.tool(reload_nornir_inventory)
     mcp.tool(run_getter)
+
+    @mcp.resource("nornir://supported-getters")
+    def supported_getters() -> dict[str, list[str]]:
+        """Return the list of supported NAPALM getters.
+
+        This resource provides a list of valid getter names that can be used with
+        the `run_getter` tool.
+
+        Returns:
+            dict: A dictionary containing the list of supported getters.
+        """
+        return {"supported_getters": sorted(list(NapalmRunner.SUPPORTED_GETTERS))}
 
     mcp.run()
 

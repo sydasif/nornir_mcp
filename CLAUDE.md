@@ -34,15 +34,15 @@ The server exposes a set of simple, direct tools to the LLM:
 * **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk.
 
-### Device Data Getters
+### Device Data Getter
 
-Each of these tools can optionally take a `hostname` argument to target a specific device.
+* **`run_getter(backend: str, getter: str, hostname: str | None = None)`**
+  Generic tool to run a getter (e.g., facts, interfaces) on target devices using a specific backend.
 
-* **`get_facts(hostname: str | None = None)`**
-* **`get_interfaces(hostname: str | None = None)`**
-* **`get_interfaces_ip(hostname: str | None = None)`**
-* **`get_arp_table(hostname: str | None = None)`**
-* **`get_mac_address_table(hostname: str | None = None)`**
+## Resources
+
+* **`nornir://supported-getters`**
+  Returns the list of valid NAPALM getters supported by the server.
 
 ## Configuration
 

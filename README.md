@@ -88,6 +88,13 @@ The server provides a single, powerful generic tool to fetch operational data fr
   run_getter(backend="napalm", getter="interfaces", hostname="switch-01")
   ```
 
+### Resources
+
+The server exposes dynamic resources to help discover capabilities:
+
+* **`nornir://supported-getters`**
+  Returns a list of all valid getter names supported by the currently registered runners. This is useful for knowing what can be passed to the `run_getter` tool.
+
 ## Security & Testing
 
 * **Read-Only Design**: The tools are currently scoped to data retrieval (Getters) to prevent accidental configuration changes.

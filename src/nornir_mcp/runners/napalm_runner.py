@@ -4,6 +4,8 @@ This module provides NAPALM-specific task execution capabilities
 for the Nornir MCP server, handling device data retrieval operations.
 """
 
+import json
+from pathlib import Path
 from typing import Any
 
 from nornir_napalm.plugins.tasks import napalm_get
@@ -19,15 +21,25 @@ class NapalmRunner(BaseRunner):
     operations through standardized getter methods.
     """
 
-    SUPPORTED_GETTERS = {
-        "facts",
-        "interfaces",
-        "interfaces_ip",
-        "arp_table",
-        "mac_address_table",
-        "config",
-        "vlans",
-    }
+    @property
+    def supported_getters(self) -> set[str]:
+        """Load and return the set of supported NAPALM getters from JSON configuration."""
+        if not hasattr(self, "_supported_getters"):
+            try:
+                # Navigate from runners/napalm_runner.py to supported_getters.json
+                # Structure: src/nornir_mcp/runners/napalm_runner.py -> src/nornir_mcp/supported_getters.json
+                json_path = Path(__file__).parent.parent / "supported_getters.json"
+
+                with open(json_path) as f:
+                    data = json.load(f)
+
+                # Extract keys from the "supported_getters" dictionary
+                self._supported_getters = set(data.get("supported_getters", {}).keys())
+            except Exception:
+                # Fallback to empty set if file cannot be read
+                self._supported_getters = set()
+
+        return self._supported_getters
 
     def run_getter(
         self, getter: str, hostname: str | None = None
@@ -41,7 +53,7 @@ class NapalmRunner(BaseRunner):
         Returns:
             Dictionary containing getter results with standardized format
         """
-        if getter not in self.SUPPORTED_GETTERS:
+        if getter not in self.supported_getters:
             return self.format_error(
                 "invalid_getter", f"Getter '{getter}' is not supported by NapalmRunner."
             )

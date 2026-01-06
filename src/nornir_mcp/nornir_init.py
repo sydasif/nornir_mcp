@@ -5,7 +5,7 @@ Singleton pattern. It is driver-agnostic and manages the Nornir lifecycle.
 """
 
 import os
-from typing import Optional
+import threading
 
 from nornir import InitNornir
 from nornir.core import Nornir
@@ -18,7 +18,8 @@ class NornirManager:
     provides thread-safe access to the Nornir instance across the application.
     """
 
-    _instance: Optional["NornirManager"] = None
+    _instance: "NornirManager | None" = None
+    _lock = threading.Lock()
 
     def __init__(self) -> None:
         """Initialize the NornirManager singleton instance.
@@ -41,8 +42,9 @@ class NornirManager:
         Returns:
             The singleton NornirManager instance
         """
-        if cls._instance is None:
-            cls._instance = cls()
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = cls()
         return cls._instance
 
     def _find_config(self) -> str:

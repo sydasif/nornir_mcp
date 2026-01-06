@@ -11,7 +11,7 @@ from nornir.core import Nornir
 from nornir.core.task import AggregatedResult
 
 from ..nornir_init import NornirManager
-from ..types import MCPError
+from ..types import MCPError, error_response
 
 
 class BaseRunner:
@@ -59,6 +59,39 @@ class BaseRunner:
             nr = nr.filter(name=hostname)
         return nr.run(task=task, **kwargs)
 
+    def process_results(
+        self, result: AggregatedResult, extractor: Callable[[Any], Any] | None = None
+    ) -> dict[str, Any] | MCPError:
+        """Process Nornir AggregatedResult into a standardized format.
+
+        Args:
+            result: The AggregatedResult from Nornir
+            extractor: Optional function to extract specific data from the result
+
+        Returns:
+            Dictionary containing processed results or MCPError
+        """
+        if not result:
+            return self.format_error("no_hosts", "No hosts found for the given target.")
+
+        data = {}
+        for host, task_result in result.items():
+            # Get the result from the first (and usually only) task in the list
+            actual_result = task_result[0]
+
+            if actual_result.failed:
+                data[host] = self.format_error(
+                    "execution_failed", str(actual_result.exception)
+                )
+            else:
+                res = actual_result.result
+                if extractor:
+                    data[host] = extractor(res)
+                else:
+                    data[host] = res
+
+        return data
+
     def format_error(self, error_type: str, message: str) -> MCPError:
         """Standardized error response.
 
@@ -69,4 +102,4 @@ class BaseRunner:
         Returns:
             Dictionary containing standardized error format
         """
-        return {"error": error_type, "message": message}
+        return error_response(error_type, message)

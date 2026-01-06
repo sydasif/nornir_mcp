@@ -10,6 +10,7 @@ from typing import Any
 import yaml
 
 from .nornir_init import nornir_manager
+from .types import error_response
 
 
 def get_inventory() -> dict[str, Any]:
@@ -37,7 +38,7 @@ def get_inventory() -> dict[str, Any]:
         return {"hosts": hosts}
 
     except Exception as e:
-        return {"error": "inventory_retrieval_failed", "message": str(e)}
+        return error_response("inventory_retrieval_failed", str(e))
 
 
 def get_capabilities() -> dict[str, Any]:
@@ -52,10 +53,10 @@ def get_capabilities() -> dict[str, Any]:
         traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
 
         if not traversable.exists():
-            return {"error": "config_missing", "message": "capabilities.yaml not found"}
+            return error_response("config_missing", "capabilities.yaml not found")
 
         with traversable.open() as f:
             return yaml.safe_load(f)
 
     except Exception as e:
-        return {"error": "capabilities_retrieval_failed", "message": str(e)}
+        return error_response("capabilities_retrieval_failed", str(e))

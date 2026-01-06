@@ -36,24 +36,11 @@ class NapalmRunner(BaseRunner):
                 task=napalm_get, hostname=hostname, getters=[getter]
             )
 
-            if not result:
-                return self.format_error(
-                    "no_hosts", f"No hosts found for target: {hostname or 'all'}"
-                )
+            # Define an extractor to pull only the specific getter data
+            def extract_getter(res: Any) -> Any:
+                return res.get(getter) if isinstance(res, dict) else res
 
-            data = {}
-            for host, task_result in result.items():
-                actual_result = task_result[0]
-
-                if actual_result.failed:
-                    data[host] = self.format_error(
-                        "napalm_failed", str(actual_result.exception)
-                    )
-                else:
-                    res = actual_result.result
-                    data[host] = res.get(getter) if isinstance(res, dict) else res
-
-            return data
+            return self.process_results(result, extractor=extract_getter)
 
         except Exception as e:
             return self.format_error("execution_error", str(e))

@@ -16,6 +16,7 @@ The project follows a scalable, object-oriented design:
 - **Nornir**: Manages inventory, concurrency, and device connections.
 
 ### Core Files
+
 - `src/nornir_mcp/main.py`: Entry point that registers tools with the MCP server.
 - `src/nornir_mcp/tools.py`: Tool definitions that delegate execution to specific runners.
 - `src/nornir_mcp/nornir_init.py`: Singleton manager for Nornir initialization.
@@ -28,31 +29,33 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ### Host Management
 
-* **`list_all_hosts()`**
+- **`list_all_hosts()`**
   Retrieves a summary of the entire Nornir inventory.
 
-* **`reload_nornir_inventory()`**
+- **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk.
 
 ### Device Data Getter
 
-* **`run_getter(backend: str, getter: str, hostname: str | None = None)`**
+- **`run_getter(backend: str, getter: str, hostname: str | None = None)`**
   Generic tool to run a getter (e.g., facts, interfaces) on target devices using a specific backend.
 
 ## Resources
 
-* **`nornir://supported-getters`**
+- **`nornir://capabilities`**
   Returns the list of valid NAPALM getters supported by the server.
 
 ## Configuration
 
 The server requires a standard Nornir `config.yaml` file and locates it via:
+
 1. Environment variable: `NORNIR_CONFIG_FILE`
 2. Local file: `config.yaml` in the current working directory.
 
 ## Development Commands
 
 ### Setup and Management
+
 ```bash
 # Install dependencies
 uv sync
@@ -66,6 +69,7 @@ uv run nornir-mcp
 ```
 
 ### Code Quality
+
 ```bash
 # Lint and Format
 uv run ruff check . --fix

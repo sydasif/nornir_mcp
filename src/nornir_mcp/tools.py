@@ -11,24 +11,27 @@ from .nornir_init import nornir_manager
 from .resources import get_inventory
 from .runners.napalm_runner import NapalmRunner
 from .runners.registry import RunnerRegistry
-from .types import MCPError
+from .types import MCPError, error_response
 
-napalm_runner = NapalmRunner(nornir_manager)
-registry = RunnerRegistry()
-registry.register("napalm", napalm_runner)
+_registry: RunnerRegistry | None = None
+
+
+def get_registry() -> RunnerRegistry:
+    """Get the runner registry, initializing it if necessary."""
+    global _registry
+    if _registry is None:
+        _registry = RunnerRegistry()
+        _registry.register("napalm", NapalmRunner(nornir_manager))
+    return _registry
 
 
 def list_all_hosts() -> dict[str, Any] | MCPError:
     """List all configured network hosts in the inventory.
 
     Returns:
-        Dictionary containing all hosts with their basic information
-        (name, IP address, platform)
+        Dictionary containing all hosts or MCPError
     """
-    result = get_inventory()
-    if "error" in result:
-        return MCPError(error="inventory_error", message=result["message"])
-    return result
+    return get_inventory()
 
 
 def run_getter(
@@ -45,8 +48,13 @@ def run_getter(
         Dictionary containing the results of the getter execution
     """
     try:
+        registry = get_registry()
         runner = registry.get(backend)
         raw_result = runner.run_getter(getter, hostname)
+
+        # Check if runner returned an error
+        if isinstance(raw_result, dict) and "error" in raw_result:
+            return raw_result  # Already formatted as MCPError
 
         return {
             "backend": backend,
@@ -54,13 +62,10 @@ def run_getter(
             "target": hostname or "all",
             "data": raw_result,
         }
-    except KeyError:
-        return MCPError(
-            error="unknown_backend",
-            message=f"Backend '{backend}' not found.",
-        )
+    except KeyError as e:
+        return error_response("unknown_backend", str(e).strip("'"))
     except Exception as e:
-        return MCPError(error="tool_error", message=str(e))
+        return error_response("tool_error", str(e))
 
 
 def reload_nornir_inventory() -> dict[str, str] | MCPError:
@@ -76,4 +81,4 @@ def reload_nornir_inventory() -> dict[str, str] | MCPError:
             "message": "Nornir inventory reloaded from disk.",
         }
     except Exception as e:
-        return MCPError(error="reload_failed", message=str(e))
+        return error_response("reload_failed", str(e))

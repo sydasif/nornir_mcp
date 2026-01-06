@@ -1,9 +1,3 @@
-"""Nornir initialization module.
-
-This module handles the initialization of the Nornir framework using a
-Singleton pattern. It is driver-agnostic.
-"""
-
 import os
 from typing import Optional
 
@@ -12,7 +6,6 @@ from nornir.core import Nornir
 
 
 class NornirManager:
-    """Singleton class to manage the Nornir instance and lifecycle."""
 
     _instance: Optional["NornirManager"] = None
 
@@ -27,13 +20,11 @@ class NornirManager:
 
     @classmethod
     def instance(cls) -> "NornirManager":
-        """Get the singleton instance of NornirManager."""
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
     def _find_config(self) -> str:
-        """Locate the Nornir configuration file."""
         path = os.getenv("NORNIR_CONFIG_FILE")
 
         if not path:
@@ -42,8 +33,6 @@ class NornirManager:
                 path = default_cfg
 
         if not path or not os.path.exists(path):
-            # Fallback to current dir if path was never set or default_cfg doesn't exist
-            # but we need a path to show in the error message
             display_path = path or "config.yaml"
             raise FileNotFoundError(
                 f"Nornir configuration file not found. Checked env var NORNIR_CONFIG_FILE "
@@ -53,7 +42,6 @@ class NornirManager:
         return path
 
     def get(self) -> Nornir:
-        """Return the active Nornir instance, initializing it if necessary."""
         if self._nornir is None:
             try:
                 self._nornir = InitNornir(config_file=self._config_file)
@@ -64,10 +52,8 @@ class NornirManager:
         return self._nornir
 
     def reload(self) -> None:
-        """Force a reload of the Nornir inventory from disk."""
         self._nornir = None
         self.get()
 
 
-# Global accessor
 nornir_manager = NornirManager.instance()

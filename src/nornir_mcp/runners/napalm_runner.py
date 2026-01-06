@@ -1,5 +1,3 @@
-"""NAPALM runner implementation."""
-
 from typing import Any
 
 from nornir_napalm.plugins.tasks import napalm_get
@@ -8,12 +6,9 @@ from .base_runner import BaseRunner
 
 
 class NapalmRunner(BaseRunner):
-    """Runner for NAPALM-specific tasks."""
 
     def run_getter(self, getter: str, hostname: str | None = None) -> dict[str, Any]:
-        """Execute a specific NAPALM getter against devices."""
         try:
-            # Use parent class method to get filtered inventory
             nr = self.get_target_hosts(hostname)
 
             if not nr.inventory.hosts:
@@ -21,12 +16,10 @@ class NapalmRunner(BaseRunner):
                     "no_hosts", f"No hosts found for target: {hostname or 'all'}"
                 )
 
-            # Run the specific getter task
             result = nr.run(task=napalm_get, getters=[getter])
 
             data = {}
             for host, task_result in result.items():
-                # task_result is a MultiResult
                 actual_result = task_result[0]
 
                 if actual_result.failed:
@@ -34,7 +27,6 @@ class NapalmRunner(BaseRunner):
                         "napalm_failed", str(actual_result.exception)
                     )
                 else:
-                    # Extract the specific key from the result dict
                     res = actual_result.result
                     data[host] = res.get(getter) if isinstance(res, dict) else res
 

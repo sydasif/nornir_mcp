@@ -9,11 +9,15 @@ from typing import Any
 
 from .nornir_init import nornir_manager
 from .runners.napalm_runner import NapalmRunner
+from .runners.registry import RunnerRegistry
+from .types import MCPError
 
 napalm_runner = NapalmRunner(nornir_manager)
+registry = RunnerRegistry()
+registry.register("napalm", napalm_runner)
 
 
-def list_all_hosts() -> dict[str, Any]:
+def list_all_hosts() -> dict[str, Any] | MCPError:
     """List all configured network hosts in the inventory.
 
     Returns:
@@ -38,70 +42,42 @@ def list_all_hosts() -> dict[str, Any]:
         return {"hosts": hosts}
 
     except Exception as e:
-        return {"error": "inventory_error", "message": str(e)}
+        return MCPError(error="inventory_error", message=str(e))
 
 
-def get_facts(hostname: str | None = None) -> dict[str, Any]:
-    """Get basic device information (vendor, model, serial, uptime).
+def run_getter(
+    backend: str, getter: str, hostname: str | None = None
+) -> dict[str, Any] | MCPError:
+    """Generic tool to run a getter on a network device.
 
     Args:
+        backend: The automation backend to use (e.g., 'napalm')
+        getter: The getter method to execute (e.g., 'facts', 'interfaces')
         hostname: Specific hostname to target, or None for all hosts
 
     Returns:
-        Dictionary containing device facts for the targeted hosts
+        Dictionary containing the results of the getter execution
     """
-    return napalm_runner.run_getter("facts", hostname)
+    try:
+        runner = registry.get(backend)
+        raw_result = runner.run_getter(getter, hostname)
+
+        return {
+            "backend": backend,
+            "getter": getter,
+            "target": hostname or "all",
+            "data": raw_result,
+        }
+    except KeyError:
+        return MCPError(
+            error="unknown_backend",
+            message=f"Backend '{backend}' not found.",
+        )
+    except Exception as e:
+        return MCPError(error="tool_error", message=str(e))
 
 
-def get_interfaces(hostname: str | None = None) -> dict[str, Any]:
-    """Get interface details (status, speed, mac address).
-
-    Args:
-        hostname: Specific hostname to target, or None for all hosts
-
-    Returns:
-        Dictionary containing interface information for the targeted hosts
-    """
-    return napalm_runner.run_getter("interfaces", hostname)
-
-
-def get_interfaces_ip(hostname: str | None = None) -> dict[str, Any]:
-    """Get IP addresses configured on interfaces.
-
-    Args:
-        hostname: Specific hostname to target, or None for all hosts
-
-    Returns:
-        Dictionary containing interface IP information for the targeted hosts
-    """
-    return napalm_runner.run_getter("interfaces_ip", hostname)
-
-
-def get_arp_table(hostname: str | None = None) -> dict[str, Any]:
-    """Get the ARP (Address Resolution Protocol) table.
-
-    Args:
-        hostname: Specific hostname to target, or None for all hosts
-
-    Returns:
-        Dictionary containing ARP table entries for the targeted hosts
-    """
-    return napalm_runner.run_getter("arp_table", hostname)
-
-
-def get_mac_address_table(hostname: str | None = None) -> dict[str, Any]:
-    """Get the MAC address table (CAM table).
-
-    Args:
-        hostname: Specific hostname to target, or None for all hosts
-
-    Returns:
-        Dictionary containing MAC address table entries for the targeted hosts
-    """
-    return napalm_runner.run_getter("mac_address_table", hostname)
-
-
-def reload_nornir_inventory() -> dict[str, str]:
+def reload_nornir_inventory() -> dict[str, str] | MCPError:
     """Reload Nornir inventory from disk to apply changes.
 
     Returns:
@@ -114,7 +90,4 @@ def reload_nornir_inventory() -> dict[str, str]:
             "message": "Nornir inventory reloaded from disk.",
         }
     except Exception as e:
-        return {
-            "error": "reload_failed",
-            "message": str(e),
-        }
+        return MCPError(error="reload_failed", message=str(e))

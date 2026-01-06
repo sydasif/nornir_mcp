@@ -6,7 +6,8 @@ A **Model Context Protocol (MCP)** server that bridges the gap between Large Lan
 
 * **Inventory Awareness**: Instantly list and filter configured network hosts.
 * **Deep Device Insights**: Fetch comprehensive data (facts, interfaces, ARP tables, IP configurations) using unified NAPALM getters.
-* **Flexible Targeting**: execute queries against a single specific device or the entire network fleet.
+* **Pluggable Architecture**: Supports multiple backends via a modular **Runner Registry**.
+* **Flexible Targeting**: Execute queries against a single specific device or the entire network fleet.
 * **Standardized Config**: Built to work with your existing Nornir configuration and inventory files.
 
 ## Architecture
@@ -15,7 +16,9 @@ The project follows a scalable, object-oriented design to ensure reliability and
 
 * **FastMCP**: Handles the Model Context Protocol communication.
 * **Nornir Manager**: A singleton lifecycle manager that handles Nornir initialization and inventory reloading.
+* **Runner Registry**: A centralized registry that manages pluggable execution backends, decoupling tools from drivers.
 * **Runners**: A modular execution layer where specific driver logic (like NAPALM) is isolated from the core server.
+* **Types**: Strict typing and error schemas (`MCPError`) ensure consistent and safe communication with LLMs.
 * **Nornir**: Manages inventory, concurrency, and device connections.
 * **NAPALM**: Provides a unified driver layer to interact with various network operating systems.
 
@@ -64,24 +67,26 @@ The server exposes a set of simple, direct tools to the LLM:
 * **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk. Use this after editing your inventory files to apply changes without restarting the server.
 
-### Device Data Getters
+### Device Data Getter
 
-Each of these tools can optionally take a `hostname` argument to target a specific device. If omitted, they will run against all devices in the inventory.
+The server provides a single, powerful generic tool to fetch operational data from network devices.
 
-* **`get_facts(hostname: str | None = None)`**
-  Gets basic device information (vendor, model, serial, uptime).
+* **`run_getter(backend: str, getter: str, hostname: str | None = None)`**
+  Executes a specific getter on a target device using the specified automation backend.
 
-* **`get_interfaces(hostname: str | None = None)`**
-  Gets interface details (status, speed, MAC address).
+  **Arguments:**
+  - `backend`: The driver to use (e.g., `"napalm"`).
+  - `getter`: The specific data to fetch (e.g., `"facts"`, `"interfaces"`, `"arp_table"`, `"mac_address_table"`).
+  - `hostname`: (Optional) The specific device to target. If omitted, runs against all devices.
 
-* **`get_interfaces_ip(hostname: str | None = None)`**
-  Gets IP addresses configured on interfaces.
+  **Example Usage:**
+  ```python
+  # Get basic facts for all devices
+  run_getter(backend="napalm", getter="facts")
 
-* **`get_arp_table(hostname: str | None = None)`**
-  Gets the device's ARP (Address Resolution Protocol) table.
-
-* **`get_mac_address_table(hostname: str | None = None)`**
-  Gets the device's MAC address table (CAM table).
+  # Get interfaces for a specific switch
+  run_getter(backend="napalm", getter="interfaces", hostname="switch-01")
+  ```
 
 ## Security & Testing
 

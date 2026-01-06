@@ -15,4 +15,4 @@ groups.yaml
 defaults.yaml
 lab/*
 !cisco.clab.yaml
-.claude/
+.claude/repomix-output.md

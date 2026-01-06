@@ -8,6 +8,7 @@ from typing import Any
 
 from nornir_napalm.plugins.tasks import napalm_get
 
+from ..types import MCPError
 from .base_runner import BaseRunner
 
 
@@ -18,7 +19,22 @@ class NapalmRunner(BaseRunner):
     operations through standardized getter methods.
     """
 
-    def run_getter(self, getter: str, hostname: str | None = None) -> dict[str, Any]:
+    # Common NAPALM getters. In a production environment, this could be
+    # dynamically fetched or more comprehensive.
+    SUPPORTED_GETTERS = {
+        "facts",
+        "interfaces",
+        "interfaces_ip",
+        "arp_table",
+        "mac_address_table",
+        "bgp_neighbors",
+        "environment",
+        "ntp_stats",
+        "snmp_information",
+        "users",
+    }
+
+    def run_getter(self, getter: str, hostname: str | None = None) -> dict[str, Any] | MCPError:
         """Execute a specific NAPALM getter against devices.
 
         Args:
@@ -28,15 +44,19 @@ class NapalmRunner(BaseRunner):
         Returns:
             Dictionary containing getter results with standardized format
         """
-        try:
-            nr = self.get_target_hosts(hostname)
+        if getter not in self.SUPPORTED_GETTERS:
+            return self.format_error(
+                "invalid_getter",
+                f"Getter '{getter}' is not supported by NapalmRunner."
+            )
 
-            if not nr.inventory.hosts:
+        try:
+            result = self.run_on_hosts(task=napalm_get, hostname=hostname, getters=[getter])
+
+            if not result:
                 return self.format_error(
                     "no_hosts", f"No hosts found for target: {hostname or 'all'}"
                 )
-
-            result = nr.run(task=napalm_get, getters=[getter])
 
             data = {}
             for host, task_result in result.items():
@@ -50,11 +70,7 @@ class NapalmRunner(BaseRunner):
                     res = actual_result.result
                     data[host] = res.get(getter) if isinstance(res, dict) else res
 
-            return {
-                "getter": getter,
-                "target": hostname or "all",
-                "data": data,
-            }
+            return data
 
         except Exception as e:
             return self.format_error("execution_error", str(e))

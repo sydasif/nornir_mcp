@@ -20,20 +20,21 @@ class NapalmRunner(BaseRunner):
     """
 
     def run_getter(
-        self, getter: str, hostname: str | None = None
+        self, getter: str, host_name: str | None = None, group_name: str | None = None
     ) -> dict[str, Any] | MCPError:
         """Execute a specific NAPALM getter against devices.
 
         Args:
             getter: The NAPALM getter method to execute (e.g., 'facts', 'interfaces')
-            hostname: Specific hostname to target, or None for all hosts
+            host_name: Specific host name to target, or None for all hosts
+            group_name: Specific group to target, or None for all hosts
 
         Returns:
             Dictionary containing getter results with standardized format
         """
         try:
             result = self.run_on_hosts(
-                task=napalm_get, hostname=hostname, getters=[getter]
+                task=napalm_get, host_name=host_name, group_name=group_name, getters=[getter]
             )
 
             # Define an extractor to pull only the specific getter data

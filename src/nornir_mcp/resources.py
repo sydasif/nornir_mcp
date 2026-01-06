@@ -18,24 +18,37 @@ def get_inventory() -> dict[str, Any]:
 
     Returns:
         Dictionary containing all hosts with their basic information
-        (name, IP address, platform).
+        (name, IP address, platform) and groups information.
     """
     try:
         nr = nornir_manager.get()
 
-        if not nr.inventory.hosts:
-            return {"hosts": {}}
-
-        hosts = {
-            host.name: {
-                "name": host.name,
-                "ip": host.hostname,
-                "platform": host.platform,
+        # Get hosts information
+        hosts = {}
+        for host_name, host_obj in nr.inventory.hosts.items():
+            hosts[host_name] = {
+                "name": host_name,
+                "ip": host_obj.hostname,
+                "platform": host_obj.platform,
+                "groups": [group.name for group in host_obj.groups] if host_obj.groups else []
             }
-            for host in nr.inventory.hosts.values()
-        }
 
-        return {"hosts": hosts}
+        # Get groups information
+        groups = {}
+        for group_name, group_obj in nr.inventory.groups.items():
+            groups[group_name] = {
+                "name": group_name,
+                "platform": group_obj.platform,
+                "hosts": [h for h, host_obj in nr.inventory.hosts.items()
+                         if group_name in [g.name for g in host_obj.groups]]
+            }
+
+        return {
+            "hosts": hosts,
+            "groups": groups,
+            "total_hosts": len(hosts),
+            "total_groups": len(groups)
+        }
 
     except Exception as e:
         return error_response("inventory_retrieval_failed", str(e))

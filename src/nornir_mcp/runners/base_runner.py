@@ -9,6 +9,7 @@ from collections.abc import Callable
 from typing import Any
 
 from nornir.core.task import AggregatedResult
+from nornir.core.filter import F
 
 from ..nornir_init import NornirManager
 from ..types import MCPError, error_response
@@ -32,22 +33,26 @@ class BaseRunner(ABC):
     def run_on_hosts(
         self,
         task: Callable[..., Any],
-        hostname: str | None = None,
+        host_name: str | None = None,
+        group_name: str | None = None,
         **kwargs: Any,
     ) -> AggregatedResult:
         """Execute a task on target hosts with encapsulated filtering.
 
         Args:
             task: The Nornir task function to execute
-            hostname: Specific hostname to target, or None for all hosts
+            host_name: Specific host name to target, or None for all hosts
+            group_name: Specific group to target, or None for all hosts
             **kwargs: Additional arguments to pass to the task
 
         Returns:
             AggregatedResult containing the execution results
         """
         nr = self.manager.get()
-        if hostname:
-            nr = nr.filter(name=hostname)
+        if host_name:
+            nr = nr.filter(name=host_name)
+        elif group_name:
+            nr = nr.filter(F(groups__contains=group_name))
         return nr.run(task=task, **kwargs)
 
     def process_results(
@@ -97,13 +102,14 @@ class BaseRunner(ABC):
 
     @abstractmethod
     def run_getter(
-        self, getter: str, hostname: str | None = None
+        self, getter: str, host_name: str | None = None, group_name: str | None = None
     ) -> dict[str, Any] | MCPError:
         """Execute a specific getter against devices.
 
         Args:
             getter: The getter method to execute
-            hostname: Specific hostname to target, or None for all hosts
+            host_name: Specific host name to target, or None for all hosts
+            group_name: Specific group to target, or None for all hosts
 
         Returns:
             Dictionary containing getter results with standardized format

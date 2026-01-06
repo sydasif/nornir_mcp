@@ -35,31 +35,36 @@ def list_all_hosts() -> dict[str, Any] | MCPError:
 
 
 def run_getter(
-    backend: str, getter: str, hostname: str | None = None
+    backend: str, getter: str, host_name: str | None = None, group_name: str | None = None
 ) -> dict[str, Any] | MCPError:
     """Generic tool to run a getter on a network device.
 
     Args:
         backend: The automation backend to use (e.g., 'napalm')
         getter: The getter method to execute (e.g., 'facts', 'interfaces')
-        hostname: (Optional) Specific hostname to target. Omit to target ALL hosts.
+        host_name: (Optional) Specific host name to target. Omit to target ALL hosts.
+        group_name: (Optional) Specific group to target. Cannot be used with host_name.
 
     Returns:
         Dictionary containing the results of the getter execution
     """
+    if host_name and group_name:
+        return error_response("invalid_parameters", "Cannot specify both host_name and group_name")
+
     try:
         registry = get_registry()
         runner = registry.get(backend)
-        raw_result = runner.run_getter(getter, hostname)
+        raw_result = runner.run_getter(getter, host_name, group_name)
 
         # Check if runner returned an error
         if isinstance(raw_result, dict) and "error" in raw_result:
             return raw_result  # Already formatted as MCPError
 
+        target = host_name or f"group:{group_name}" or "all"
         return {
             "backend": backend,
             "getter": getter,
-            "target": hostname or "all",
+            "target": target,
             "data": raw_result,
         }
     except KeyError as e:

@@ -32,7 +32,7 @@ class NornirManager:
             )
 
         self._nornir: Nornir | None = None
-        self._config_file: str = self._find_config()
+        self._config_file: str | None = None
 
     @classmethod
     def instance(cls) -> "NornirManager":
@@ -79,6 +79,9 @@ class NornirManager:
         Returns:
             The active Nornir instance
         """
+        if self._config_file is None:
+            self._config_file = self._find_config()
+
         if self._nornir is None:
             try:
                 self._nornir = InitNornir(config_file=self._config_file)

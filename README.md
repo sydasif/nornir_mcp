@@ -56,36 +56,34 @@ The server requires a standard Nornir `config.yaml` file. It locates this config
 
 ## Available Tools
 
-The server exposes three primary capabilities to the LLM:
+The server exposes a set of simple, direct tools to the LLM:
 
-### 1. `list_all_hosts`
+### Host Management
 
-Retrieves a summary of the entire Nornir inventory, including hostnames, IP addresses, and platform types.
+* **`list_all_hosts()`**
+  Retrieves a summary of the entire Nornir inventory, including hostnames, IP addresses, and platform types.
 
-* **Usage**: `list_all_hosts()`
+* **`reload_nornir_inventory()`**
+  Reloads the Nornir inventory from disk. Use this after editing your inventory files to apply changes without restarting the server.
 
-### 2. `get_device_data`
+### Device Data Getters
 
-Collects detailed operational data from devices.
+Each of these tools can optionally take a `hostname` argument to target a specific device. If omitted, they will run against all devices in the inventory.
 
-* **Parameters**:
-  * `target_host` (optional): The specific device name to query. If omitted, queries all hosts.
-  * `getters` (optional): A list of data points to fetch. Defaults to `["facts"]`.
-* **Supported Getters**: `facts`, `interfaces`, `interfaces_ip`, `arp_table`, `mac_address_table`.
+* **`get_facts(hostname: str | None = None)`**
+  Gets basic device information (vendor, model, serial, uptime).
 
-**Example Prompts**:
-> "Get the ARP table and interface IPs for Switch1."
-> "Show me basic facts for all routers in the inventory."
+* **`get_interfaces(hostname: str | None = None)`**
+  Gets interface details (status, speed, MAC address).
 
-### 3. `reload_nornir_inventory`
+* **`get_interfaces_ip(hostname: str | None = None)`**
+  Gets IP addresses configured on interfaces.
 
-Reloads the Nornir inventory from disk without restarting the server.
+* **`get_arp_table(hostname: str | None = None)`**
+  Gets the device's ARP (Address Resolution Protocol) table.
 
-* **Usage**: `reload_nornir_inventory()`
-* **Use Case**: Call this after editing your inventory files (hosts.yaml, groups.yaml, defaults.yaml) to refresh the device list and configurations.
-
-**Example Prompt**:
-> "I've updated my hosts.yaml file. Please reload the inventory."
+* **`get_mac_address_table(hostname: str | None = None)`**
+  Gets the device's MAC address table (CAM table).
 
 ## Security & Testing
 

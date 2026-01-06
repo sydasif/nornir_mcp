@@ -1,39 +1,22 @@
 """Tools module for Nornir MCP server.
 
-This module contains the core tool definitions for the MCP server. These functions
-are designed to be registered as MCP tools to expose Nornir automation capabilities
-to LLMs.
+This module contains the core tool definitions for the MCP server.
+It uses specific functions for each NAPALM getter to ensure high reliability with LLMs.
 """
-
-import json
-from typing import Literal
 
 from nornir_napalm.plugins.tasks import napalm_get
 
-from .constants import ALLOWED_GETTERS
-from .nornir_init import get_nornir, reload_inventory
-
-NapalmGetter = Literal[
-    "facts",
-    "interfaces",
-    "interfaces_ip",
-    "arp_table",
-    "mac_address_table",
-]
+from .nornir_init import nornir_manager
 
 
 def list_all_hosts():
     """List all configured network hosts in the inventory.
 
-    Retrieves the list of network devices from the Nornir inventory, including
-    their names, IP addresses, and platforms.
-
     Returns:
-        dict: A dictionary containing a list of hosts with their details, or
-              an error message if the inventory is empty or inaccessible.
+        dict: A dictionary containing a list of hosts with their details.
     """
     try:
-        nr = get_nornir()
+        nr = nornir_manager.get()
 
         if not nr.inventory.hosts:
             return {"hosts": {}}
@@ -53,67 +36,26 @@ def list_all_hosts():
         return {"error": "inventory_error", "message": str(e)}
 
 
-def get_device_data(
-    target_host: str | None = None,
-    getters: list[NapalmGetter] | str | None = None,
-):
-    """Collect data from network devices using NAPALM getters.
-
-    Executes specified NAPALM getters against one or all devices in the inventory.
-    Allows filtering by target host and selecting specific data points to retrieve.
-
-    Args:
-        target_host (str | None): The name of a specific host to query. If None,
-            queries all hosts in the inventory.
-        getters (list[str] | str | None): A list of NAPALM getters to execute (e.g.,
-            ['facts', 'interfaces']) or a JSON string representation of the list.
-            Defaults to ['facts'] if not specified.
-            See ALLOWED_GETTERS for the full list of supported getters.
-
-    Returns:
-        dict: A dictionary containing the query parameters and the results from
-              each device, or error details if the operation failed.
-    """
+def _run_napalm_getter(getter: str, hostname: str | None = None):
+    """Helper function to run a specific NAPALM getter."""
     try:
-        nr = get_nornir()
+        nr = nornir_manager.get()
 
-        if target_host:
-            nr = nr.filter(name=target_host)
+        if hostname:
+            nr = nr.filter(name=hostname)
 
         if not nr.inventory.hosts:
             return {
                 "error": "no_hosts",
-                "message": f"No hosts found for target: {target_host}",
+                "message": f"No hosts found for target: {hostname or 'all'}",
             }
 
-        # Parse string getters if necessary
-        if isinstance(getters, str):
-            try:
-                getters = json.loads(getters)
-            except json.JSONDecodeError:
-                return {
-                    "error": "invalid_format",
-                    "message": "getters must be a list or a valid JSON string of a list",
-                }
-
-        # Default getter
-        if not getters:
-            getters = ["facts"]
-
-        # Validate getters
-        invalid = set(getters) - ALLOWED_GETTERS.keys()
-        if invalid:
-            return {
-                "error": "invalid_getters",
-                "invalid": sorted(invalid),
-                "allowed": sorted(ALLOWED_GETTERS),
-            }
-
-        result = nr.run(task=napalm_get, getters=getters)
+        # Run the specific getter
+        result = nr.run(task=napalm_get, getters=[getter])
 
         data = {}
         for host, task_result in result.items():
-            # task_result is a MultiResult (list-like container)
+            # task_result is a MultiResult (list-like)
             # Access [0] to get the actual Result object
             actual_result = task_result[0]
 
@@ -123,11 +65,14 @@ def get_device_data(
                     "message": str(actual_result.exception),
                 }
             else:
-                data[host] = actual_result.result
+                # The result is nested in a dict keyed by the getter name
+                # e.g. {'facts': {...}} -> we want just the inner {...}
+                res = actual_result.result
+                data[host] = res.get(getter) if isinstance(res, dict) else res
 
         return {
-            "target": target_host or "all",
-            "getters": getters,
+            "getter": getter,
+            "target": hostname or "all",
             "data": data,
         }
 
@@ -138,23 +83,38 @@ def get_device_data(
         }
 
 
+def get_facts(hostname: str | None = None):
+    """Get basic device information (vendor, model, serial, uptime)."""
+    return _run_napalm_getter("facts", hostname)
+
+
+def get_interfaces(hostname: str | None = None):
+    """Get interface details (status, speed, mac address)."""
+    return _run_napalm_getter("interfaces", hostname)
+
+
+def get_interfaces_ip(hostname: str | None = None):
+    """Get IP addresses configured on interfaces."""
+    return _run_napalm_getter("interfaces_ip", hostname)
+
+
+def get_arp_table(hostname: str | None = None):
+    """Get the ARP (Address Resolution Protocol) table."""
+    return _run_napalm_getter("arp_table", hostname)
+
+
+def get_mac_address_table(hostname: str | None = None):
+    """Get the MAC address table (CAM table)."""
+    return _run_napalm_getter("mac_address_table", hostname)
+
+
 def reload_nornir_inventory():
-    """Reload Nornir inventory from disk.
-
-    This tool clears the Nornir cache and forces a fresh reload of all
-    inventory and configuration files on the next request. Use this when
-    you've updated your inventory files (hosts.yaml, groups.yaml, or
-    defaults.yaml) and want the changes to take effect without restarting
-    the MCP server.
-
-    Returns:
-        dict: A confirmation message indicating the inventory was reloaded.
-    """
+    """Reload Nornir inventory from disk to apply changes."""
     try:
-        reload_inventory()
+        nornir_manager.reload()
         return {
             "status": "success",
-            "message": "Nornir inventory cache cleared. Next request will reload from disk.",
+            "message": "Nornir inventory reloaded from disk.",
         }
     except Exception as e:
         return {

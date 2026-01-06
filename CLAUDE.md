@@ -15,27 +15,40 @@ The project follows a modular design with these key components:
 - **NAPALM**: Provides a unified driver layer to interact with various network operating systems
 
 ### Core Files
-- `src/nornir_mcp/main.py`: Entry point that registers tools and resources with the MCP server
-- `src/nornir_mcp/tools.py`: Contains the core tool definitions (`list_all_hosts`, `get_device_data`, and `reload_nornir_inventory`)
-- `src/nornir_mcp/nornir_init.py`: Handles Nornir initialization with singleton caching using `@lru_cache`
-- `src/nornir_mcp/constants.py`: Defines allowed NAPALM getters
-- `src/nornir_mcp/resources.py`: Provides resource endpoints for MCP
+- `src/nornir_mcp/main.py`: Entry point that registers tools with the MCP server
+- `src/nornir_mcp/tools.py`: Contains the core tool definitions (`list_all_hosts`, `get_facts`, `get_interfaces`, `get_interfaces_ip`, `get_arp_table`, `get_mac_address_table`, and `reload_nornir_inventory`)
+- `src/nornir_mcp/nornir_init.py`: Handles Nornir initialization with a robust Singleton Manager class for improved lifecycle management
 
 ## Available Tools
 
-### 1. `list_all_hosts`
-Retrieves a summary of the entire Nornir inventory, including hostnames, IP addresses, and platform types.
+The server exposes a set of simple, direct tools to the LLM:
 
-### 2. `get_device_data`
-Collects detailed operational data from devices using NAPALM getters:
-- `facts`: Basic device information
-- `interfaces`: Interface state and speed
-- `interfaces_ip`: IP addressing per interface
-- `arp_table`: ARP entries
-- `mac_address_table`: MAC address table
+### Host Management
 
-### 3. `reload_nornir_inventory`
-Clears the Nornir cache and forces a reload of inventory files from disk. Use this when you've updated your inventory files without restarting the MCP server.
+* **`list_all_hosts()`**
+  Retrieves a summary of the entire Nornir inventory, including hostnames, IP addresses, and platform types.
+
+* **`reload_nornir_inventory()`**
+  Reloads the Nornir inventory from disk. Use this after editing your inventory files to apply changes without restarting the server.
+
+### Device Data Getters
+
+Each of these tools can optionally take a `hostname` argument to target a specific device. If omitted, they will run against all devices in the inventory.
+
+* **`get_facts(hostname: str | None = None)`**
+  Gets basic device information (vendor, model, serial, uptime).
+
+* **`get_interfaces(hostname: str | None = None)`**
+  Gets interface details (status, speed, MAC address).
+
+* **`get_interfaces_ip(hostname: str | None = None)`**
+  Gets IP addresses configured on interfaces.
+
+* **`get_arp_table(hostname: str | None = None)`**
+  Gets the device's ARP (Address Resolution Protocol) table.
+
+* **`get_mac_address_table(hostname: str | None = None)`**
+  Gets the device's MAC address table (CAM table).
 
 ## Configuration
 

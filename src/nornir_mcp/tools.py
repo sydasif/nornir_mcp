@@ -53,7 +53,7 @@ def run_getter(
     Args:
         backend: The automation backend to use (e.g., 'napalm')
         getter: The getter method to execute (e.g., 'facts', 'interfaces')
-        hostname: Specific hostname to target, or None for all hosts
+        hostname: (optional) Specific hostname to target, or Omit for all hosts
 
     Returns:
         Dictionary containing the results of the getter execution

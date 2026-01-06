@@ -19,22 +19,19 @@ class NapalmRunner(BaseRunner):
     operations through standardized getter methods.
     """
 
-    # Common NAPALM getters. In a production environment, this could be
-    # dynamically fetched or more comprehensive.
     SUPPORTED_GETTERS = {
         "facts",
         "interfaces",
         "interfaces_ip",
         "arp_table",
         "mac_address_table",
-        "bgp_neighbors",
-        "environment",
-        "ntp_stats",
-        "snmp_information",
-        "users",
+        "config",
+        "vlans",
     }
 
-    def run_getter(self, getter: str, hostname: str | None = None) -> dict[str, Any] | MCPError:
+    def run_getter(
+        self, getter: str, hostname: str | None = None
+    ) -> dict[str, Any] | MCPError:
         """Execute a specific NAPALM getter against devices.
 
         Args:
@@ -46,12 +43,13 @@ class NapalmRunner(BaseRunner):
         """
         if getter not in self.SUPPORTED_GETTERS:
             return self.format_error(
-                "invalid_getter",
-                f"Getter '{getter}' is not supported by NapalmRunner."
+                "invalid_getter", f"Getter '{getter}' is not supported by NapalmRunner."
             )
 
         try:
-            result = self.run_on_hosts(task=napalm_get, hostname=hostname, getters=[getter])
+            result = self.run_on_hosts(
+                task=napalm_get, hostname=hostname, getters=[getter]
+            )
 
             if not result:
                 return self.format_error(

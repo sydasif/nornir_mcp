@@ -4,17 +4,17 @@ This module defines the base class for all network automation runners,
 providing common functionality and interface for device interaction.
 """
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
-from nornir.core import Nornir
 from nornir.core.task import AggregatedResult
 
 from ..nornir_init import NornirManager
 from ..types import MCPError, error_response
 
 
-class BaseRunner:
+class BaseRunner(ABC):
     """Parent class for network automation runners.
 
     Provides common functionality for filtering hosts and formatting
@@ -28,15 +28,6 @@ class BaseRunner:
             manager: The NornirManager instance to use for Nornir access
         """
         self.manager = manager
-
-    @property
-    def nr(self) -> Nornir:
-        """Access the Nornir instance from the manager.
-
-        Returns:
-            The active Nornir instance managed by the NornirManager
-        """
-        return self.manager.get()
 
     def run_on_hosts(
         self,
@@ -103,3 +94,17 @@ class BaseRunner:
             Dictionary containing standardized error format
         """
         return error_response(error_type, message)
+
+    @abstractmethod
+    def run_getter(
+        self, getter: str, hostname: str | None = None
+    ) -> dict[str, Any] | MCPError:
+        """Execute a specific getter against devices.
+
+        Args:
+            getter: The getter method to execute
+            hostname: Specific hostname to target, or None for all hosts
+
+        Returns:
+            Dictionary containing getter results with standardized format
+        """

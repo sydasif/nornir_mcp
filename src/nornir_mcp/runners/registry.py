@@ -47,3 +47,10 @@ class RunnerRegistry:
             List of backend names
         """
         return list(self._runners.keys())
+
+    def reset(self) -> None:
+        """Reset the registry, clearing all registered runners.
+
+        Useful for testing isolation.
+        """
+        self._runners.clear()

@@ -81,16 +81,17 @@ class NornirManager:
         Returns:
             The active Nornir instance
         """
-        if self._config_file is None:
-            self._config_file = self._find_config()
+        with self._lock:
+            if self._config_file is None:
+                self._config_file = self._find_config()
 
-        if self._nornir is None:
-            try:
-                self._nornir = InitNornir(config_file=self._config_file)
-            except Exception as e:
-                raise RuntimeError(
-                    f"Failed to initialize Nornir from {self._config_file}: {e}"
-                ) from e
+            if self._nornir is None:
+                try:
+                    self._nornir = InitNornir(config_file=self._config_file)
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to initialize Nornir from {self._config_file}: {e}"
+                    ) from e
         return self._nornir
 
     def reload(self) -> None:

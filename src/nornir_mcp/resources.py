@@ -52,7 +52,7 @@ def get_capabilities() -> dict[str, Any]:
         # This is more robust than Path(__file__) for packaged applications
         traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
 
-        if not traversable.exists():
+        if not traversable.is_file():
             return error_response("config_missing", "capabilities.yaml not found")
 
         with traversable.open() as f:

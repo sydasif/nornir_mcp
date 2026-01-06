@@ -42,6 +42,9 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ## Resources
 
+- **`nornir://inventory`**
+  Returns a summary of the current Nornir inventory (hosts, IPs, platforms).
+
 - **`nornir://capabilities`**
   Returns the list of valid NAPALM getters supported by the server.
 

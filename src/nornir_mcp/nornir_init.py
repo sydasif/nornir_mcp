@@ -1,7 +1,7 @@
-"""Nornir initialization module for Model Context Protocol (MCP) server.
+"""Nornir initialization module.
 
 This module handles the initialization of the Nornir framework using a
-Singleton pattern to manage the Nornir lifecycle and configuration.
+Singleton pattern. It is driver-agnostic.
 """
 
 import os
@@ -33,11 +33,7 @@ class NornirManager:
         return cls._instance
 
     def _find_config(self) -> str:
-        """Locate the Nornir configuration file.
-
-        Checks the NORNIR_CONFIG_FILE environment variable first,
-        then falls back to 'config.yaml' in the current directory.
-        """
+        """Locate the Nornir configuration file."""
         path = os.getenv("NORNIR_CONFIG_FILE")
 
         if not path:
@@ -46,9 +42,12 @@ class NornirManager:
                 path = default_cfg
 
         if not path or not os.path.exists(path):
+            # Fallback to current dir if path was never set or default_cfg doesn't exist
+            # but we need a path to show in the error message
+            display_path = path or "config.yaml"
             raise FileNotFoundError(
                 f"Nornir configuration file not found. Checked env var NORNIR_CONFIG_FILE "
-                f"and local '{path or 'config.yaml'}'."
+                f"and local '{display_path}'."
             )
 
         return path
@@ -66,11 +65,9 @@ class NornirManager:
 
     def reload(self) -> None:
         """Force a reload of the Nornir inventory from disk."""
-        # Setting to None forces re-initialization on next get() call
         self._nornir = None
-        # Trigger immediate reload to catch errors early
         self.get()
 
 
-# Global accessor for easy imports
+# Global accessor
 nornir_manager = NornirManager.instance()

@@ -11,9 +11,11 @@ A **Model Context Protocol (MCP)** server that bridges the gap between Large Lan
 
 ## Architecture
 
-The project follows a modular design to ensure reliability and ease of use:
+The project follows a scalable, object-oriented design to ensure reliability and future-proofing:
 
 * **FastMCP**: Handles the Model Context Protocol communication.
+* **Nornir Manager**: A singleton lifecycle manager that handles Nornir initialization and inventory reloading.
+* **Runners**: A modular execution layer where specific driver logic (like NAPALM) is isolated from the core server.
 * **Nornir**: Manages inventory, concurrency, and device connections.
 * **NAPALM**: Provides a unified driver layer to interact with various network operating systems.
 

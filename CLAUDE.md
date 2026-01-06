@@ -8,16 +8,19 @@ Nornir MCP Server is a Model Context Protocol (MCP) server that bridges the gap 
 
 ## Architecture
 
-The project follows a modular design with these key components:
+The project follows a scalable, object-oriented design:
 
-- **FastMCP**: Handles the Model Context Protocol communication
-- **Nornir**: Manages inventory, concurrency, and device connections
-- **NAPALM**: Provides a unified driver layer to interact with various network operating systems
+- **FastMCP**: Handles the Model Context Protocol communication.
+- **Nornir Manager**: A singleton (`NornirManager`) that manages the Nornir lifecycle and inventory.
+- **Runners**: Modular execution layer for driver-specific tasks (e.g., `NapalmRunner`).
+- **Nornir**: Manages inventory, concurrency, and device connections.
 
 ### Core Files
-- `src/nornir_mcp/main.py`: Entry point that registers tools with the MCP server
-- `src/nornir_mcp/tools.py`: Contains the core tool definitions (`list_all_hosts`, `get_facts`, `get_interfaces`, `get_interfaces_ip`, `get_arp_table`, `get_mac_address_table`, and `reload_nornir_inventory`)
-- `src/nornir_mcp/nornir_init.py`: Handles Nornir initialization with a robust Singleton Manager class for improved lifecycle management
+- `src/nornir_mcp/main.py`: Entry point that registers tools with the MCP server.
+- `src/nornir_mcp/tools.py`: Tool definitions that delegate execution to specific runners.
+- `src/nornir_mcp/nornir_init.py`: Singleton manager for Nornir initialization.
+- `src/nornir_mcp/runners/base_runner.py`: Parent class for all automation runners.
+- `src/nornir_mcp/runners/napalm_runner.py`: NAPALM-specific task implementation.
 
 ## Available Tools
 
@@ -26,41 +29,32 @@ The server exposes a set of simple, direct tools to the LLM:
 ### Host Management
 
 * **`list_all_hosts()`**
-  Retrieves a summary of the entire Nornir inventory, including hostnames, IP addresses, and platform types.
+  Retrieves a summary of the entire Nornir inventory.
 
 * **`reload_nornir_inventory()`**
-  Reloads the Nornir inventory from disk. Use this after editing your inventory files to apply changes without restarting the server.
+  Reloads the Nornir inventory from disk.
 
 ### Device Data Getters
 
-Each of these tools can optionally take a `hostname` argument to target a specific device. If omitted, they will run against all devices in the inventory.
+Each of these tools can optionally take a `hostname` argument to target a specific device.
 
 * **`get_facts(hostname: str | None = None)`**
-  Gets basic device information (vendor, model, serial, uptime).
-
 * **`get_interfaces(hostname: str | None = None)`**
-  Gets interface details (status, speed, MAC address).
-
 * **`get_interfaces_ip(hostname: str | None = None)`**
-  Gets IP addresses configured on interfaces.
-
 * **`get_arp_table(hostname: str | None = None)`**
-  Gets the device's ARP (Address Resolution Protocol) table.
-
 * **`get_mac_address_table(hostname: str | None = None)`**
-  Gets the device's MAC address table (CAM table).
 
 ## Configuration
 
 The server requires a standard Nornir `config.yaml` file and locates it via:
-1. Environment variable: `NORNIR_CONFIG_FILE` (absolute path)
-2. Local file: `config.yaml` in the current working directory
+1. Environment variable: `NORNIR_CONFIG_FILE`
+2. Local file: `config.yaml` in the current working directory.
 
 ## Development Commands
 
 ### Setup and Management
 ```bash
-# Install dependencies using uv (recommended)
+# Install dependencies
 uv sync
 
 # Install in development mode
@@ -73,25 +67,17 @@ uv run nornir-mcp
 
 ### Code Quality
 ```bash
-# Lint with Ruff
-uv run ruff check .
+# Lint and Format
 uv run ruff check . --fix
-
-# Format with Ruff
 uv run ruff format .
 
-# Run any tests (if present)
-uv run pytest
+# Type Check
+uv run pyright
 ```
-
-### Python Version
-- The project uses Python 3.11 (as specified in `.python-version`)
-- Dependencies are managed with `uv` as per `pyproject.toml`
 
 ## Key Patterns
 
-- Uses `@lru_cache(maxsize=1)` for singleton Nornir initialization in `nornir_init.py`
-- Provides explicit `reload_inventory()` function for cache invalidation
-- Implements error handling with specific error types in tool functions
-- Validates input parameters and returns structured error responses
-- Follows a read-only design approach to prevent accidental configuration changes
+- **Singleton Pattern**: `NornirManager.instance()` ensures only one Nornir instance exists.
+- **Runner Pattern**: Driver-specific logic is encapsulated in runner classes inheriting from `BaseRunner`.
+- **Explicit Type Hints**: All tool functions must have explicit return type hints (e.g., `-> dict[str, Any]`) for better MCP schema generation.
+- **Read-Only Design**: Primary focus is on operational data retrieval.

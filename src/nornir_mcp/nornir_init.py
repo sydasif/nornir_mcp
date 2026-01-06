@@ -1,3 +1,9 @@
+"""Nornir initialization module.
+
+This module handles the initialization of the Nornir framework using a
+Singleton pattern. It is driver-agnostic and manages the Nornir lifecycle.
+"""
+
 import os
 from typing import Optional
 
@@ -6,10 +12,20 @@ from nornir.core import Nornir
 
 
 class NornirManager:
+    """Singleton class to manage the Nornir instance and lifecycle.
+
+    Handles Nornir initialization, configuration file discovery, and
+    provides thread-safe access to the Nornir instance across the application.
+    """
 
     _instance: Optional["NornirManager"] = None
 
     def __init__(self) -> None:
+        """Initialize the NornirManager singleton instance.
+
+        Raises:
+            RuntimeError: If an instance already exists (enforces singleton pattern)
+        """
         if NornirManager._instance is not None:
             raise RuntimeError(
                 "Use NornirManager.instance() to get the singleton instance."
@@ -20,11 +36,27 @@ class NornirManager:
 
     @classmethod
     def instance(cls) -> "NornirManager":
+        """Get the singleton instance of NornirManager.
+
+        Returns:
+            The singleton NornirManager instance
+        """
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
     def _find_config(self) -> str:
+        """Locate the Nornir configuration file.
+
+        First checks the NORNIR_CONFIG_FILE environment variable, then
+        looks for a local 'config.yaml' file.
+
+        Returns:
+            Path to the Nornir configuration file
+
+        Raises:
+            FileNotFoundError: If no configuration file is found
+        """
         path = os.getenv("NORNIR_CONFIG_FILE")
 
         if not path:
@@ -42,6 +74,11 @@ class NornirManager:
         return path
 
     def get(self) -> Nornir:
+        """Return the active Nornir instance, initializing it if necessary.
+
+        Returns:
+            The active Nornir instance
+        """
         if self._nornir is None:
             try:
                 self._nornir = InitNornir(config_file=self._config_file)
@@ -52,6 +89,11 @@ class NornirManager:
         return self._nornir
 
     def reload(self) -> None:
+        """Force a reload of the Nornir inventory from disk.
+
+        This clears the current Nornir instance and creates a new one,
+        effectively reloading the inventory from the configuration file.
+        """
         self._nornir = None
         self.get()
 

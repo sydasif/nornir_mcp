@@ -1,3 +1,9 @@
+"""Main entry point for the Nornir Model Context Protocol (MCP) server.
+
+This module initializes and runs the MCP server, registering all available
+tools for network automation tasks.
+"""
+
 from fastmcp import FastMCP
 
 from nornir_mcp.tools import (
@@ -12,6 +18,7 @@ from nornir_mcp.tools import (
 
 
 def main():
+    """Initialize and run the Nornir MCP server."""
     mcp = FastMCP("nornir-mcp")
 
     mcp.tool(list_all_hosts)

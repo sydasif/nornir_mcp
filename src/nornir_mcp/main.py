@@ -4,9 +4,11 @@ This module initializes and runs the MCP server, registering all available
 tools for network automation tasks.
 """
 
+import json
+import os
+
 from fastmcp import FastMCP
 
-from nornir_mcp.runners.napalm_runner import NapalmRunner
 from nornir_mcp.tools import (
     list_all_hosts,
     reload_nornir_inventory,
@@ -32,7 +34,15 @@ def main():
         Returns:
             dict: A dictionary containing the list of supported getters.
         """
-        return {"supported_getters": sorted(list(NapalmRunner.SUPPORTED_GETTERS))}
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            json_path = os.path.join(current_dir, "supported_getters.json")
+            
+            with open(json_path, "r") as f:
+                data = json.load(f)
+            return data
+        except Exception:
+            return {"supported_getters": []}
 
     mcp.run()
 

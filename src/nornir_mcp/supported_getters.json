@@ -1,0 +1,11 @@
+{
+    "supported_getters": [
+        "arp_table",
+        "config",
+        "facts",
+        "interfaces",
+        "interfaces_ip",
+        "mac_address_table",
+        "vlans"
+    ]
+}

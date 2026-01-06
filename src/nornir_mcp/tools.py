@@ -8,6 +8,7 @@ performing network automation tasks.
 from typing import Any
 
 from .nornir_init import nornir_manager
+from .resources import get_inventory
 from .runners.napalm_runner import NapalmRunner
 from .runners.registry import RunnerRegistry
 from .types import MCPError
@@ -24,25 +25,10 @@ def list_all_hosts() -> dict[str, Any] | MCPError:
         Dictionary containing all hosts with their basic information
         (name, IP address, platform)
     """
-    try:
-        nr = nornir_manager.get()
-
-        if not nr.inventory.hosts:
-            return {"hosts": {}}
-
-        hosts = {
-            host.name: {
-                "name": host.name,
-                "ip": host.hostname,
-                "platform": host.platform,
-            }
-            for host in nr.inventory.hosts.values()
-        }
-
-        return {"hosts": hosts}
-
-    except Exception as e:
-        return MCPError(error="inventory_error", message=str(e))
+    result = get_inventory()
+    if "error" in result:
+        return MCPError(error="inventory_error", message=result["message"])
+    return result
 
 
 def run_getter(

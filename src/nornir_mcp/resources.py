@@ -4,7 +4,7 @@ Provides data-centric resources for the MCP server, allowing LLMs to
 inspect the environment and capabilities before taking action.
 """
 
-from pathlib import Path
+from importlib import resources
 from typing import Any
 
 import yaml
@@ -47,14 +47,14 @@ def get_capabilities() -> dict[str, Any]:
         Dictionary mapping getter names to human-readable descriptions.
     """
     try:
-        # Resolve path to capabilities.yaml
-        current_dir = Path(__file__).parent
-        yaml_path = current_dir / "data" / "capabilities.yaml"
+        # Use importlib.resources to access the capabilities.yaml file
+        # This is more robust than Path(__file__) for packaged applications
+        traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
 
-        if not yaml_path.exists():
+        if not traversable.exists():
             return {"error": "config_missing", "message": "capabilities.yaml not found"}
 
-        with open(yaml_path) as f:
+        with traversable.open() as f:
             return yaml.safe_load(f)
 
     except Exception as e:

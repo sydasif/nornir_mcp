@@ -8,7 +8,6 @@ performing network automation tasks.
 from typing import Any
 
 from .nornir_init import nornir_manager
-from .resources import get_inventory
 from .runners.napalm_runner import NapalmRunner
 from .runners.registry import RunnerRegistry
 from .types import MCPError, error_response
@@ -23,15 +22,6 @@ def get_registry() -> RunnerRegistry:
         _registry = RunnerRegistry()
         _registry.register("napalm", NapalmRunner(nornir_manager))
     return _registry
-
-
-def list_all_hosts() -> dict[str, Any] | MCPError:
-    """List all configured network hosts in the inventory.
-
-    Returns:
-        Dictionary containing all hosts or MCPError
-    """
-    return get_inventory()
 
 
 def run_getter(

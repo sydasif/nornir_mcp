@@ -8,7 +8,6 @@ from fastmcp import FastMCP
 
 from nornir_mcp.resources import get_capabilities, get_inventory
 from nornir_mcp.tools import (
-    list_all_hosts,
     reload_nornir_inventory,
     run_getter,
 )
@@ -19,7 +18,6 @@ def main():
     mcp = FastMCP("nornir-mcp")
 
     # Register Tools
-    mcp.tool(list_all_hosts)
     mcp.tool(reload_nornir_inventory)
     mcp.tool(run_getter)
 

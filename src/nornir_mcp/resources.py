@@ -30,7 +30,7 @@ def get_inventory() -> dict[str, Any]:
                 "name": host_name,
                 "ip": host_obj.hostname,
                 "platform": host_obj.platform,
-                "groups": [group.name for group in host_obj.groups] if host_obj.groups else []
+                "groups": [group.name for group in host_obj.groups] if host_obj.groups else [],
             }
 
         # Get groups information
@@ -39,16 +39,14 @@ def get_inventory() -> dict[str, Any]:
             groups[group_name] = {
                 "name": group_name,
                 "platform": group_obj.platform,
-                "hosts": [h for h, host_obj in nr.inventory.hosts.items()
-                         if group_name in [g.name for g in host_obj.groups]]
+                "hosts": [
+                    h
+                    for h, host_obj in nr.inventory.hosts.items()
+                    if group_name in [g.name for g in host_obj.groups]
+                ],
             }
 
-        return {
-            "hosts": hosts,
-            "groups": groups,
-            "total_hosts": len(hosts),
-            "total_groups": len(groups)
-        }
+        return {"hosts": hosts, "groups": groups, "total_hosts": len(hosts), "total_groups": len(groups)}
 
     except Exception as e:
         return error_response("inventory_retrieval_failed", str(e))

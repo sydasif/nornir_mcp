@@ -29,9 +29,6 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ### Host Management
 
-- **`list_all_hosts()`**
-  Retrieves a summary of the entire Nornir inventory.
-
 - **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk.
 

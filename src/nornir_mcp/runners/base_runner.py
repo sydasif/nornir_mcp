@@ -8,8 +8,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
-from nornir.core.task import AggregatedResult
 from nornir.core.filter import F
+from nornir.core.task import AggregatedResult
 
 from ..nornir_init import NornirManager
 from ..types import MCPError, error_response
@@ -76,9 +76,7 @@ class BaseRunner(ABC):
             actual_result = task_result[0]
 
             if actual_result.failed:
-                data[host] = self.format_error(
-                    "execution_failed", str(actual_result.exception)
-                )
+                data[host] = self.format_error("execution_failed", str(actual_result.exception))
             else:
                 res = actual_result.result
                 if extractor:

@@ -31,4 +31,50 @@ package = true
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "ruff>=0.9.10",
 ]
+
+[tool.ruff]
+# Exclude a few common directories
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+# Set the maximum line length
+line-length = 110
+
+# Add the flake8-assertions plugin
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "S", "B", "C9", "UP", "PL", "PT"]
+ignore = [
+    "PT011",  # Use of `pytest.raises()` with multiple statements
+]
+extend-ignore = [
+    # Allow assert in tests
+    "S101",  # Use of assert detected
+    "PLW0603",  # Global statement is discouraged (needed for singleton pattern)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Allow asserts in test files
+"tests/**/*" = ["S101"]

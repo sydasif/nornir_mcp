@@ -28,9 +28,7 @@ class NornirManager:
             RuntimeError: If an instance already exists (enforces singleton pattern)
         """
         if NornirManager._instance is not None:
-            raise RuntimeError(
-                "Use NornirManager.instance() to get the singleton instance."
-            )
+            raise RuntimeError("Use NornirManager.instance() to get the singleton instance.")
 
         self._nornir: Nornir | None = None
         self._config_file: str | None = None
@@ -89,9 +87,7 @@ class NornirManager:
                 try:
                     self._nornir = InitNornir(config_file=self._config_file)
                 except Exception as e:
-                    raise RuntimeError(
-                        f"Failed to initialize Nornir from {self._config_file}: {e}"
-                    ) from e
+                    raise RuntimeError(f"Failed to initialize Nornir from {self._config_file}: {e}") from e
         return self._nornir
 
     def reload(self) -> None:

@@ -1,8 +1,20 @@
+"""Runner registry module for Nornir MCP server.
+
+This module provides a centralized registry for managing different network
+automation runners (e.g., NAPALM, Netmiko) that can be dynamically loaded
+and accessed by the tools.
+"""
+
 from .base_runner import BaseRunner
 
 
 class RunnerRegistry:
-    """Registry for managing network automation runners."""
+    """Centralized registry for managing network automation runners.
+
+    This class provides a way to register, retrieve, and manage different
+    automation backends (e.g., NAPALM, Netmiko) that can be used by the
+    MCP server tools to interact with network devices.
+    """
 
     def __init__(self) -> None:
         self._runners: dict[str, BaseRunner] = {}
@@ -35,9 +47,7 @@ class RunnerRegistry:
         """
         if name not in self._runners:
             available = ", ".join(self._runners.keys())
-            raise KeyError(
-                f"Backend '{name}' not found. Available backends: {available or 'none'}"
-            )
+            raise KeyError(f"Backend '{name}' not found. Available backends: {available or 'none'}")
         return self._runners[name]
 
     def list_runners(self) -> list[str]:

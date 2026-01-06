@@ -61,9 +61,6 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ### Host Management
 
-* **`list_all_hosts()`**
-  Retrieves a summary of the entire Nornir inventory, including hostnames, IP addresses, and platform types.
-
 * **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk. Use this after editing your inventory files to apply changes without restarting the server.
 
@@ -92,7 +89,10 @@ The server provides a single, powerful generic tool to fetch operational data fr
 
 The server exposes dynamic resources to help discover capabilities:
 
-* **`nornir://supported-getters`**
+* **`nornir://inventory`**
+  Returns a summary of the current Nornir inventory (hosts, IPs, platforms).
+
+* **`nornir://capabilities`**
   Returns a list of all valid getter names supported by the currently registered runners. This is useful for knowing what can be passed to the `run_getter` tool.
 
 ## Security & Testing

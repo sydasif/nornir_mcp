@@ -21,7 +21,7 @@ from typing import Any
 
 import yaml
 
-from .constants import ErrorType
+from .constants import ConfigKey, DefaultValue, ErrorType
 from .nornir_init import NornirManager
 from .types import error_response
 
@@ -110,10 +110,10 @@ def _load_capabilities() -> dict[str, Any]:
     """
     # Use importlib.resources to access the capabilities.yaml file
     # This is more robust than Path(__file__) for packaged applications
-    traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
+    traversable = resources.files("nornir_mcp.data").joinpath(DefaultValue.CAPABILITIES_FILENAME.value)
 
     if not traversable.is_file():
-        raise FileNotFoundError("capabilities.yaml not found")
+        raise FileNotFoundError(f"{DefaultValue.CAPABILITIES_FILENAME.value} not found")
 
     with traversable.open() as f:
         return yaml.safe_load(f)
@@ -144,11 +144,12 @@ def get_getters() -> dict[str, Any]:
     try:
         capabilities = _load_capabilities()
         # Return only the getters section
-        if "getters" in capabilities:
-            return {"getters": capabilities["getters"]}
+        if ConfigKey.GETTERS.value in capabilities:
+            return {"getters": capabilities[ConfigKey.GETTERS.value]}
         else:
             return error_response(
-                ErrorType.GETTERS_NOT_FOUND, "getters section not found in capabilities.yaml"
+                ErrorType.GETTERS_NOT_FOUND,
+                f"{ConfigKey.GETTERS.value} section not found in {DefaultValue.CAPABILITIES_FILENAME.value}",
             )
     except Exception as e:
         return error_response(ErrorType.GETTERS_RETRIEVAL_FAILED, str(e))
@@ -179,12 +180,13 @@ def get_netmiko_commands() -> dict[str, Any]:
     try:
         capabilities = _load_capabilities()
         # Return only the netmiko_commands section
-        if "netmiko_commands" in capabilities:
-            return {"commands": capabilities["netmiko_commands"]}
+        if ConfigKey.NETMIKO_COMMANDS.value in capabilities:
+            return {"commands": capabilities[ConfigKey.NETMIKO_COMMANDS.value]}
         else:
             return error_response(
                 ErrorType.NETMIKO_COMMANDS_NOT_FOUND,
-                "netmiko_commands section not found in capabilities.yaml",
+                f"{ConfigKey.NETMIKO_COMMANDS.value} section not found in "
+                f"{DefaultValue.CAPABILITIES_FILENAME.value}",
             )
 
     except Exception as e:

@@ -10,6 +10,7 @@ A **Model Context Protocol (MCP)** server that bridges the gap between Large Lan
 * **Explicit Architecture**: Uses dedicated runners for each backend (NAPALM, Netmiko) for clarity and simplicity.
 * **Flexible Targeting**: Execute queries against a single specific device or an entire group.
 * **Standardized Config**: Built to work with your existing Nornir configuration and inventory files.
+* **Style & Consistency**: Follows PEP 8 standards with comprehensive documentation, type hints, and consistent error handling.
 
 ## Architecture
 
@@ -19,6 +20,9 @@ The project follows a scalable, object-oriented design to ensure reliability and
 * **Nornir Manager**: A singleton lifecycle manager that handles Nornir initialization and inventory reloading.
 * **Runners**: A modular execution layer where specific backend logic (e.g., `NapalmRunner`, `NetmikoRunner`) is isolated from the core server.
 * **Types**: Strict typing and error schemas (`MCPError`) ensure consistent and safe communication with LLMs.
+* **Result Type**: Custom `Success`/`Error` result wrapper for explicit error handling paths.
+* **Constants**: Centralized constants and enumerations for consistent error types, backends, and configuration keys.
+* **Utils**: Shared utility functions for target formatting, parameter validation, and data extraction.
 * **Nornir**: Manages inventory, concurrency, and device connections.
 * **NAPALM**: Provides a unified driver layer to interact with various network operating systems using getters.
 * **Netmiko**: Provides a way to send raw CLI commands to devices.
@@ -80,14 +84,13 @@ The server provides dedicated tools for NAPALM getters and Netmiko commands.
   * `host_name`: (Optional) The specific device to target. If omitted, runs against all devices.
   * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
 
-* **`run_netmiko_command(command: str, host_name: str | None = None, group_name: str | None = None, **kwargs)`**
+* **`run_netmiko_command(command: str, host_name: str | None = None, group_name: str | None = None)`**
   Executes a raw CLI command on a target device using Netmiko.
 
   **Arguments:**
   * `command`: The exact CLI command to execute (e.g., `"show version"`, `"show ip route"`).
   * `host_name`: (Optional) The specific device to target.
   * `group_name`: (Optional) The specific group to target.
-  * `**kwargs`: (Optional) Additional arguments passed directly to the Netmiko task (e.g., `enable=True`, `read_timeout=60`).
 
 **Example Usage:**
 
@@ -104,8 +107,8 @@ run_netmiko_command(command="show ip route", host_name="router-01")
 # Get the running configuration for all devices in the 'core' group
 run_netmiko_command(command="show running-config", group_name="core")
 
-# Send a command requiring enable mode with a custom timeout
-run_netmiko_command(command="show tech-support", host_name="firewall-01", enable=True, read_timeout=120)
+# Get system information for a specific firewall
+run_netmiko_command(command="show system", host_name="firewall-01")
 ```
 
 ### Resources

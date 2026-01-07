@@ -6,10 +6,11 @@ tools for network automation tasks.
 
 from fastmcp import FastMCP
 
-from nornir_mcp.resources import get_capabilities, get_inventory
+from nornir_mcp.resources import get_capabilities
 from nornir_mcp.tools import (
+    list_nornir_inventory,
     reload_nornir_inventory,
-    run_getter,
+    run_napalm_getter,
 )
 
 
@@ -18,15 +19,11 @@ def main():
     mcp = FastMCP("nornir-mcp")
 
     # Register Tools
+    mcp.tool(list_nornir_inventory)
+    mcp.tool(run_napalm_getter)
     mcp.tool(reload_nornir_inventory)
-    mcp.tool(run_getter)
 
     # Register Resources
-    @mcp.resource("nornir://inventory")
-    def inventory_resource() -> dict:
-        """The current Nornir inventory (hosts, IPs, platforms)."""
-        return get_inventory()
-
     @mcp.resource("nornir://capabilities")
     def capabilities_resource() -> dict:
         """Supported automation capabilities and getter descriptions."""

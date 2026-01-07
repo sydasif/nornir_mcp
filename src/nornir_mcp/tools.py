@@ -8,6 +8,7 @@ performing network automation tasks.
 from typing import Any
 
 from .nornir_init import nornir_manager
+from .resources import get_inventory
 from .runners.napalm_runner import NapalmRunner
 from .runners.registry import RunnerRegistry
 from .types import MCPError, error_response
@@ -24,7 +25,7 @@ def get_registry() -> RunnerRegistry:
     return _registry
 
 
-def run_getter(
+def run_napalm_getter(
     backend: str, getter: str, host_name: str | None = None, group_name: str | None = None
 ) -> dict[str, Any] | MCPError:
     """Generic tool to run a getter on a network device.
@@ -61,6 +62,15 @@ def run_getter(
         return error_response("unknown_backend", str(e).strip("'"))
     except Exception as e:
         return error_response("tool_error", str(e))
+
+
+def list_nornir_inventory() -> dict[str, Any] | MCPError:
+    """List all configured network hosts in the inventory.
+
+    Returns:
+        Dictionary containing all hosts or MCPError
+    """
+    return get_inventory()
 
 
 def reload_nornir_inventory() -> dict[str, str] | MCPError:

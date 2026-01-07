@@ -6,8 +6,10 @@ from nornir_mcp.nornir_init import get_nornir, reset_nornir
 
 def test_get_nornir_initialization():
     """Test that get_nornir initializes and returns a Nornir instance."""
-    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
-         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+    with (
+        patch("nornir_mcp.nornir_init._locate_config_file", return_value="/fake/config.yaml"),
+        patch("nornir_mcp.nornir_init.InitNornir") as mock_init_nornir,
+    ):
         # Reset the global instance before the test within the mock context
         reset_nornir()
 
@@ -20,8 +22,10 @@ def test_get_nornir_initialization():
 
 def test_get_nornir_caching():
     """Test that get_nornir returns the same instance on subsequent calls."""
-    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
-         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+    with (
+        patch("nornir_mcp.nornir_init._locate_config_file", return_value="/fake/config.yaml"),
+        patch("nornir_mcp.nornir_init.InitNornir") as mock_init_nornir,
+    ):
         # Reset the global instance before the test within the mock context
         reset_nornir()
 
@@ -35,8 +39,10 @@ def test_get_nornir_caching():
 
 def test_thread_safe_get_nornir():
     """Test thread safety of get_nornir function."""
-    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
-         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+    with (
+        patch("nornir_mcp.nornir_init._locate_config_file", return_value="/fake/config.yaml"),
+        patch("nornir_mcp.nornir_init.InitNornir") as mock_init_nornir,
+    ):
         # Reset the global instance before the test within the mock context
         reset_nornir()
 
@@ -60,8 +66,10 @@ def test_thread_safe_get_nornir():
 
 def test_reset_nornir():
     """Test that reset_nornir recreates the Nornir instance."""
-    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
-         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+    with (
+        patch("nornir_mcp.nornir_init._locate_config_file", return_value="/fake/config.yaml"),
+        patch("nornir_mcp.nornir_init.InitNornir") as mock_init_nornir,
+    ):
         # Reset the global instance before the test within the mock context
         reset_nornir()
 

@@ -64,17 +64,17 @@ def _locate_config_file() -> str:
     Raises:
         FileNotFoundError: If no configuration file is found
     """
-    config_path = os.getenv(EnvVar.NORNIR_CONFIG_FILE.value)
+    config_path = os.getenv(EnvVar.NORNIR_CONFIG_FILE)
 
     if not config_path:
-        default_config_file = DefaultValue.CONFIG_FILENAME.value
+        default_config_file = DefaultValue.CONFIG_FILENAME
         if os.path.exists(default_config_file):
             config_path = default_config_file
 
     if not config_path or not os.path.exists(config_path):
-        display_path = config_path if config_path else DefaultValue.CONFIG_FILENAME.value
+        display_path = config_path if config_path else DefaultValue.CONFIG_FILENAME
         raise FileNotFoundError(
-            f"Nornir configuration file not found. Checked env var {EnvVar.NORNIR_CONFIG_FILE.value} "
+            f"Nornir configuration file not found. Checked env var {EnvVar.NORNIR_CONFIG_FILE} "
             f"and local '{display_path}'."
         )
 

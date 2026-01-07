@@ -30,8 +30,8 @@ def format_target(host_name: str | None, group_name: str | None) -> str:
     if host_name:
         return host_name
     if group_name:
-        return f"{TargetType.GROUP.value}:{group_name}"
-    return TargetType.ALL.value
+        return f"{TargetType.GROUP}:{group_name}"
+    return TargetType.ALL
 
 
 def validate_target_params(host_name: str | None, group_name: str | None) -> None:

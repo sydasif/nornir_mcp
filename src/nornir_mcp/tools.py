@@ -61,7 +61,7 @@ async def run_napalm_getter(
     try:
         data = await asyncio.to_thread(runner.run_getter, getter, host_name, group_name)
         return {
-            "backend": Backend.NAPALM.value,
+            "backend": Backend.NAPALM,
             "getter": getter,
             "target": format_target(host_name, group_name),
             "data": data,
@@ -113,7 +113,7 @@ async def run_netmiko_command(
     try:
         data = await asyncio.to_thread(runner.run_command, command, host_name, group_name)
         return {
-            "backend": Backend.NETMIKO.value,
+            "backend": Backend.NETMIKO,
             "command": command,
             "target": format_target(host_name, group_name),
             "data": data,

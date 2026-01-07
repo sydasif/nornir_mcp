@@ -109,10 +109,10 @@ def _load_capabilities() -> dict[str, Any]:
     """
     # Use importlib.resources to access the capabilities.yaml file
     # This is more robust than Path(__file__) for packaged applications
-    traversable = resources.files("nornir_mcp.data").joinpath(DefaultValue.CAPABILITIES_FILENAME.value)
+    traversable = resources.files("nornir_mcp.data").joinpath(DefaultValue.CAPABILITIES_FILENAME)
 
     if not traversable.is_file():
-        raise FileNotFoundError(f"{DefaultValue.CAPABILITIES_FILENAME.value} not found")
+        raise FileNotFoundError(f"{DefaultValue.CAPABILITIES_FILENAME} not found")
 
     with traversable.open() as f:
         return yaml.safe_load(f)
@@ -147,12 +147,12 @@ def get_getters() -> dict[str, Any]:
     try:
         capabilities = _load_capabilities()
         # Return only the getters section
-        if ConfigKey.GETTERS.value in capabilities:
-            return {"getters": capabilities[ConfigKey.GETTERS.value]}
+        if ConfigKey.GETTERS in capabilities:
+            return {"getters": capabilities[ConfigKey.GETTERS]}
         else:
             return error_response(
                 ErrorType.GETTERS_NOT_FOUND,
-                f"{ConfigKey.GETTERS.value} section not found in {DefaultValue.CAPABILITIES_FILENAME.value}",
+                f"{ConfigKey.GETTERS} section not found in {DefaultValue.CAPABILITIES_FILENAME}",
             )
     except Exception as e:
         return error_response(ErrorType.GETTERS_RETRIEVAL_FAILED, str(e))
@@ -183,13 +183,12 @@ def get_netmiko_commands() -> dict[str, Any]:
     try:
         capabilities = _load_capabilities()
         # Return only the netmiko_commands section
-        if ConfigKey.NETMIKO_COMMANDS.value in capabilities:
-            return {"commands": capabilities[ConfigKey.NETMIKO_COMMANDS.value]}
+        if ConfigKey.NETMIKO_COMMANDS in capabilities:
+            return {"commands": capabilities[ConfigKey.NETMIKO_COMMANDS]}
         else:
             return error_response(
                 ErrorType.NETMIKO_COMMANDS_NOT_FOUND,
-                f"{ConfigKey.NETMIKO_COMMANDS.value} section not found in "
-                f"{DefaultValue.CAPABILITIES_FILENAME.value}",
+                f"{ConfigKey.NETMIKO_COMMANDS} section not found in {DefaultValue.CAPABILITIES_FILENAME}",
             )
 
     except Exception as e:

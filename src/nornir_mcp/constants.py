@@ -4,10 +4,10 @@ This module contains all constant values used throughout the application
 to ensure consistency and prevent typos.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ErrorType(str, Enum):
+class ErrorType(StrEnum):
     """Error type identifiers for MCP error responses."""
 
     NO_HOSTS = "no_hosts"
@@ -26,14 +26,14 @@ class ErrorType(str, Enum):
     TOOL_ERROR = "tool_error"
 
 
-class Backend(str, Enum):
+class Backend(StrEnum):
     """Automation backend identifiers."""
 
     NAPALM = "napalm"
     NETMIKO = "netmiko"
 
 
-class TargetType(str, Enum):
+class TargetType(StrEnum):
     """Target type identifiers for device filtering."""
 
     ALL = "all"
@@ -41,20 +41,20 @@ class TargetType(str, Enum):
     GROUP = "group"
 
 
-class ConfigKey(str, Enum):
+class ConfigKey(StrEnum):
     """Configuration file keys."""
 
     GETTERS = "getters"
     NETMIKO_COMMANDS = "netmiko_commands"
 
 
-class EnvVar(str, Enum):
+class EnvVar(StrEnum):
     """Environment variable names."""
 
     NORNIR_CONFIG_FILE = "NORNIR_CONFIG_FILE"
 
 
-class DefaultValue(str, Enum):
+class DefaultValue(StrEnum):
     """Default values for configuration."""
 
     CONFIG_FILENAME = "config.yaml"

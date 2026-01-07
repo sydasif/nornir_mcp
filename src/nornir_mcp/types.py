@@ -53,6 +53,6 @@ def error_response(error_type: ErrorType | str, message: str) -> MCPError:
         >>> error_response("not_found", "Host not found")
         {'error': 'not_found', 'message': 'Host not found'}
     """
-    # Convert enum to string if needed
-    error_str = error_type.value if isinstance(error_type, ErrorType) else error_type
+    # Convert to string (works with StrEnum, str, or other types)
+    error_str = str(error_type)
     return {"error": error_str, "message": message}

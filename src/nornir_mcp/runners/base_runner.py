@@ -72,7 +72,7 @@ class BaseRunner(ABC):
             MCPException: If no hosts are found for the given target
         """
         if not aggregated_result:
-            raise MCPException(ErrorType.NO_HOSTS.value, "No hosts found for the given target.")
+            raise MCPException(ErrorType.NO_HOSTS, "No hosts found for the given target.")
 
         processed_data = {}
         for hostname, multi_result in aggregated_result.items():
@@ -81,7 +81,7 @@ class BaseRunner(ABC):
                 # For individual host failures, we still return success at the aggregate level
                 # but include the error in the data for that specific host
                 processed_data[hostname] = {
-                    "error": ErrorType.EXECUTION_FAILED.value,
+                    "error": ErrorType.EXECUTION_FAILED,
                     "message": "No task results available for this host",
                 }
                 continue
@@ -100,7 +100,7 @@ class BaseRunner(ABC):
                 error_message = str(failed_task.exception) if failed_task else "Unknown execution failure"
 
                 processed_data[hostname] = {
-                    "error": ErrorType.EXECUTION_FAILED.value,
+                    "error": ErrorType.EXECUTION_FAILED,
                     "message": error_message,
                 }
             else:
@@ -123,6 +123,6 @@ class BaseRunner(ABC):
         Raises:
             MCPException: With the specified error type and message
         """
-        # Convert enum to string if needed
-        error_type_str = error_type.value if isinstance(error_type, ErrorType) else error_type
+        # Convert to string (works with StrEnum, str, or other types)
+        error_type_str = str(error_type)
         raise MCPException(error_type_str, message)

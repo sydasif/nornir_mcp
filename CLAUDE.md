@@ -29,18 +29,19 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ### Host Management
 
+- **`list_nornir_inventory()`**
+  Lists all configured network hosts in the inventory, including hostnames, IP addresses, and platform types.
+
 - **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk.
 
 ### Device Data Getter
 
-- **`run_getter(backend: str, getter: str, hostname: str | None = None)`**
+- **`run_napalm_getter(backend: str, getter: str, host_name: str | None = None, group_name: str | None = None)`**
   Generic tool to run a getter (e.g., facts, interfaces) on target devices using a specific backend.
+  Supports targeting individual hosts or groups of devices.
 
 ## Resources
-
-- **`nornir://inventory`**
-  Returns a summary of the current Nornir inventory (hosts, IPs, platforms).
 
 - **`nornir://capabilities`**
   Returns the list of valid NAPALM getters supported by the server.

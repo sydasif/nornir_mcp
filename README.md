@@ -61,6 +61,9 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ### Host Management
 
+* **`list_nornir_inventory()`**
+  Lists all configured network hosts in the inventory, including hostnames, IP addresses, and platform types.
+
 * **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk. Use this after editing your inventory files to apply changes without restarting the server.
 
@@ -68,32 +71,34 @@ The server exposes a set of simple, direct tools to the LLM:
 
 The server provides a single, powerful generic tool to fetch operational data from network devices.
 
-* **`run_getter(backend: str, getter: str, hostname: str | None = None)`**
+* **`run_napalm_getter(backend: str, getter: str, host_name: str | None = None, group_name: str | None = None)`**
   Executes a specific getter on a target device using the specified automation backend.
 
   **Arguments:**
-  - `backend`: The driver to use (e.g., `"napalm"`).
-  - `getter`: The specific data to fetch (e.g., `"facts"`, `"interfaces"`, `"arp_table"`, `"mac_address_table"`).
-  - `hostname`: (Optional) The specific device to target. If omitted, runs against all devices.
+  * `backend`: The driver to use (e.g., `"napalm"`).
+  * `getter`: The specific data to fetch (e.g., `"facts"`, `"interfaces"`, `"arp_table"`, `"mac_address_table"`).
+  * `host_name`: (Optional) The specific device to target. If omitted, runs against all devices.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
 
-  **Example Usage:**
-  ```python
-  # Get basic facts for all devices
-  run_getter(backend="napalm", getter="facts")
+**Example Usage:**
 
-  # Get interfaces for a specific switch
-  run_getter(backend="napalm", getter="interfaces", hostname="switch-01")
-  ```
+```python
+# Get basic facts for all devices
+run_napalm_getter(backend="napalm", getter="facts")
+
+# Get interfaces for a specific switch
+run_napalm_getter(backend="napalm", getter="interfaces", host_name="switch-01")
+
+# Get facts for all devices in a specific group
+run_napalm_getter(backend="napalm", getter="facts", group_name="spine-routers")
+```
 
 ### Resources
 
 The server exposes dynamic resources to help discover capabilities:
 
-* **`nornir://inventory`**
-  Returns a summary of the current Nornir inventory (hosts, IPs, platforms).
-
 * **`nornir://capabilities`**
-  Returns a list of all valid getter names supported by the currently registered runners. This is useful for knowing what can be passed to the `run_getter` tool.
+  Returns a list of all valid getter names supported by the currently registered runners. This is useful for knowing what can be passed to the `run_napalm_getter` tool.
 
 ## Security & Testing
 

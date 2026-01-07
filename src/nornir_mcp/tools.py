@@ -21,11 +21,13 @@ Example:
 
 from typing import Any
 
+from .constants import Backend, ErrorType
 from .nornir_init import NornirManager
 from .resources import get_getters, get_inventory, get_netmiko_commands
 from .runners.napalm_runner import NapalmRunner
 from .runners.netmiko_runner import NetmikoRunner
 from .types import MCPError, NapalmResult, NetmikoResult, error_response
+from .utils import format_target, validate_target_params
 
 
 def run_napalm_getter(
@@ -58,46 +60,44 @@ def run_napalm_getter(
         ValueError: If both host_name and group_name are specified
         Exception: If the NAPALM getter execution fails
     """
-    if host_name and group_name:
-        return error_response("invalid_parameters", "Cannot specify both host_name and group_name")
-
-    # Validate getter name against capabilities
-    valid_getters_data = get_getters()
-    if isinstance(valid_getters_data, dict) and "getters" in valid_getters_data:
-        valid_getters = valid_getters_data["getters"]
-        if getter not in valid_getters:
-            return error_response(
-                "invalid_getter",
-                f"Unknown getter '{getter}'. Valid getters: {', '.join(valid_getters.keys())}"
-            )
-    else:
-        # If we can't validate, warn but continue (fail gracefully)
-        pass
-
     try:
+        validate_target_params(host_name, group_name)
+
+        # Validate getter name against capabilities
+        valid_getters_data = get_getters()
+        if isinstance(valid_getters_data, dict) and "getters" in valid_getters_data:
+            valid_getters = valid_getters_data["getters"]
+            if getter not in valid_getters:
+                return error_response(
+                    ErrorType.INVALID_GETTER,
+                    f"Unknown getter '{getter}'. Valid getters: {', '.join(valid_getters.keys())}"
+                )
+        else:
+            # If we can't validate, warn but continue (fail gracefully)
+            pass
+
         manager = NornirManager.instance()
         runner = NapalmRunner(manager)
-        raw_result = runner.run_getter(getter, host_name, group_name)
+        result = runner.run_getter(getter, host_name, group_name)
 
-        # Check if runner returned an error
-        if isinstance(raw_result, dict) and "error" in raw_result:
-            return raw_result  # Already formatted as MCPError
+        # Handle the Result type
+        if result.is_error():
+            # Convert the Result error to MCPError format
+            return error_response(result.error_type, result.message)
 
-        if host_name:
-            target = host_name
-        elif group_name:
-            target = f"group:{group_name}"
-        else:
-            target = "all"
+        target = format_target(host_name, group_name)
+        raw_data = result.unwrap()
 
         return {
-            "backend": "napalm",
+            "backend": Backend.NAPALM.value,
             "getter": getter,
             "target": target,
-            "data": raw_result,
+            "data": raw_data,
         }
+    except ValueError as e:
+        return error_response(ErrorType.INVALID_PARAMETERS, str(e))
     except Exception as e:
-        return error_response("tool_error", str(e))
+        return error_response(ErrorType.TOOL_ERROR, str(e))
 
 
 def run_netmiko_command(
@@ -130,54 +130,53 @@ def run_netmiko_command(
         ValueError: If both host_name and group_name are specified
         Exception: If the Netmiko command execution fails
     """
-    if host_name and group_name:
-        return error_response("invalid_parameters", "Cannot specify both host_name and group_name")
-
-    # Validate command to prevent potentially dangerous inputs
-    # Commands should be non-empty and not contain dangerous characters like semicolons or pipes
-    if not command or not isinstance(command, str):
-        return error_response("invalid_command", "Command must be a non-empty string")
-
-    # Basic validation to prevent command injection
-    dangerous_patterns = [';', '&&', '||', '|', '`', '$(']
-    for pattern in dangerous_patterns:
-        if pattern in command:
-            return error_response("invalid_command", f"Command contains potentially dangerous character sequence: {pattern}")
-
-    # Optionally validate against known commands (currently permissive but could be made strict)
-    # For now, we just log if the command is not in the known list
-    valid_commands_data = get_netmiko_commands()
-    if isinstance(valid_commands_data, dict) and "commands" in valid_commands_data:
-        valid_commands = valid_commands_data["commands"]
-        # We don't fail validation for unknown commands as users may need to run custom commands
-    else:
-        # If we can't validate, continue anyway
-        pass
-
     try:
+        validate_target_params(host_name, group_name)
+
+        # Validate command to prevent potentially dangerous inputs
+        # Commands should be non-empty and not contain dangerous characters like semicolons or pipes
+        if not command or not isinstance(command, str):
+            return error_response(ErrorType.INVALID_COMMAND, "Command must be a non-empty string")
+
+        # Basic validation to prevent command injection
+        dangerous_patterns = [';', '&&', '||', '|', '`', '$(']
+        for pattern in dangerous_patterns:
+            if pattern in command:
+                return error_response(
+                    ErrorType.INVALID_COMMAND,
+                    f"Command contains potentially dangerous character sequence: {pattern}"
+                )
+
+        valid_commands_data = get_netmiko_commands()
+        if isinstance(valid_commands_data, dict) and "commands" in valid_commands_data:
+            # We don't fail validation for unknown commands as users may need to run custom commands
+            pass
+        else:
+            # If we can't validate, continue anyway
+            pass
+
         manager = NornirManager.instance()
         runner = NetmikoRunner(manager)
-        raw_result = runner.run_command(command, host_name, group_name)
+        result = runner.run_command(command, host_name, group_name)
 
-        # Check if runner returned an error
-        if isinstance(raw_result, dict) and "error" in raw_result:
-            return raw_result  # Already formatted as MCPError
+        # Handle the Result type
+        if result.is_error():
+            # Convert the Result error to MCPError format
+            return error_response(result.error_type, result.message)
 
-        if host_name:
-            target = host_name
-        elif group_name:
-            target = f"group:{group_name}"
-        else:
-            target = "all"
+        target = format_target(host_name, group_name)
+        raw_data = result.unwrap()
 
         return {
-            "backend": "netmiko",
+            "backend": Backend.NETMIKO.value,
             "command": command,
             "target": target,
-            "data": raw_result,
+            "data": raw_data,
         }
+    except ValueError as e:
+        return error_response(ErrorType.INVALID_PARAMETERS, str(e))
     except Exception as e:
-        return error_response("tool_error", str(e))
+        return error_response(ErrorType.TOOL_ERROR, str(e))
 
 
 def list_nornir_inventory() -> dict[str, Any] | MCPError:
@@ -236,4 +235,4 @@ def reload_nornir_inventory() -> dict[str, str] | MCPError:
             "message": "Nornir inventory reloaded from disk.",
         }
     except Exception as e:
-        return error_response("reload_failed", str(e))
+        return error_response(ErrorType.RELOAD_FAILED, str(e))

@@ -4,22 +4,24 @@ This module defines the base class for all network automation runners,
 providing common functionality and interface for device interaction.
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
 from nornir.core.filter import F
 from nornir.core.task import AggregatedResult
 
+from ..constants import ErrorType
 from ..nornir_init import NornirManager
-from ..types import MCPError, error_response
+from ..result import Error, Result, Success
 
 
 class BaseRunner(ABC):
-    """Parent class for network automation runners.
+    """Abstract base class for network automation runners.
 
-    Provides common functionality for filtering hosts and formatting
-    standardized error responses across different automation backends.
+    All runners must implement the execute() method which performs
+    their backend-specific operations. Provides common functionality
+    for filtering hosts and formatting standardized error responses.
     """
 
     def __init__(self, manager: NornirManager):
@@ -29,6 +31,21 @@ class BaseRunner(ABC):
             manager: The NornirManager instance to use for Nornir access
         """
         self.manager = manager
+
+    @abstractmethod
+    def execute(self, **kwargs: Any) -> Result[dict[str, Any], str]:
+        """Execute backend-specific operation.
+
+        Subclasses must implement this method to define their
+        primary execution logic.
+
+        Args:
+            **kwargs: Backend-specific parameters
+
+        Returns:
+            Result containing either execution results or error information
+        """
+        pass
 
     def run_on_hosts(
         self,
@@ -56,37 +73,42 @@ class BaseRunner(ABC):
         return nr.run(task=task, **kwargs)
 
     def process_results(
-        self, result: AggregatedResult, extractor: Callable[[Any], Any] | None = None
-    ) -> dict[str, Any] | MCPError:
+        self, aggregated_result: AggregatedResult, extractor: Callable[[Any], Any] | None = None
+    ) -> Result[dict[str, Any], str]:
         """Process Nornir AggregatedResult into a standardized format.
 
         Args:
-            result: The AggregatedResult from Nornir
+            aggregated_result: The AggregatedResult from Nornir
             extractor: Optional function to extract specific data from the result
 
         Returns:
-            Dictionary containing processed results or MCPError
+            Result containing either processed results or error information
         """
-        if not result:
-            return self.format_error("no_hosts", "No hosts found for the given target.")
+        if not aggregated_result:
+            return self.format_error(ErrorType.NO_HOSTS, "No hosts found for the given target.")
 
-        data = {}
-        for host, task_result in result.items():
+        processed_data = {}
+        for hostname, multi_result in aggregated_result.items():
             # Get the result from the first (and usually only) task in the list
-            actual_result = task_result[0]
+            primary_task = multi_result[0]
 
-            if actual_result.failed:
-                data[host] = self.format_error("execution_failed", str(actual_result.exception))
+            if primary_task.failed:
+                # For individual host failures, we still return success at the aggregate level
+                # but include the error in the data for that specific host
+                processed_data[hostname] = {
+                    "error": ErrorType.EXECUTION_FAILED,
+                    "message": str(primary_task.exception)
+                }
             else:
-                res = actual_result.result
+                task_output = primary_task.result
                 if extractor:
-                    data[host] = extractor(res)
+                    processed_data[hostname] = extractor(task_output)
                 else:
-                    data[host] = res
+                    processed_data[hostname] = task_output
 
-        return data
+        return Success(processed_data)
 
-    def format_error(self, error_type: str, message: str) -> MCPError:
+    def format_error(self, error_type: str, message: str) -> Result[dict[str, Any], str]:
         """Standardized error response.
 
         Args:
@@ -94,6 +116,6 @@ class BaseRunner(ABC):
             message: Error message to include in response
 
         Returns:
-            Dictionary containing standardized error format
+            Error Result with the specified error type and message
         """
-        return error_response(error_type, message)
+        return Error(error_type, message)

@@ -21,6 +21,7 @@ from typing import Any
 
 import yaml
 
+from .constants import ErrorType
 from .nornir_init import NornirManager
 from .types import error_response
 
@@ -90,7 +91,7 @@ def get_inventory() -> dict[str, Any]:
         return {"hosts": hosts, "groups": groups, "total_hosts": len(hosts), "total_groups": len(groups)}
 
     except Exception as e:
-        return error_response("inventory_retrieval_failed", str(e))
+        return error_response(ErrorType.INVENTORY_RETRIEVAL_FAILED, str(e))
 
 
 @lru_cache(maxsize=1)
@@ -147,10 +148,10 @@ def get_getters() -> dict[str, Any]:
             return {"getters": capabilities["getters"]}
         else:
             return error_response(
-                "getters_not_found", "getters section not found in capabilities.yaml"
+                ErrorType.GETTERS_NOT_FOUND, "getters section not found in capabilities.yaml"
             )
     except Exception as e:
-        return error_response("getters_retrieval_failed", str(e))
+        return error_response(ErrorType.GETTERS_RETRIEVAL_FAILED, str(e))
 
 
 def get_netmiko_commands() -> dict[str, Any]:
@@ -182,8 +183,9 @@ def get_netmiko_commands() -> dict[str, Any]:
             return {"commands": capabilities["netmiko_commands"]}
         else:
             return error_response(
-                "netmiko_commands_not_found", "netmiko_commands section not found in capabilities.yaml"
+                ErrorType.NETMIKO_COMMANDS_NOT_FOUND,
+                "netmiko_commands section not found in capabilities.yaml"
             )
 
     except Exception as e:
-        return error_response("netmiko_commands_retrieval_failed", str(e))
+        return error_response(ErrorType.NETMIKO_COMMANDS_RETRIEVAL_FAILED, str(e))

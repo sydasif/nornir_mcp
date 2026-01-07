@@ -10,6 +10,8 @@ import threading
 from nornir import InitNornir
 from nornir.core import Nornir
 
+from .constants import DefaultValue, EnvVar
+
 
 class NornirManager:
     """Singleton class to manage the Nornir instance and lifecycle.
@@ -57,21 +59,21 @@ class NornirManager:
         Raises:
             FileNotFoundError: If no configuration file is found
         """
-        path = os.getenv("NORNIR_CONFIG_FILE")
+        config_path = os.getenv(EnvVar.NORNIR_CONFIG_FILE.value)
 
-        if not path:
-            default_cfg = "config.yaml"
-            if os.path.exists(default_cfg):
-                path = default_cfg
+        if not config_path:
+            default_config_file = DefaultValue.CONFIG_FILENAME.value
+            if os.path.exists(default_config_file):
+                config_path = default_config_file
 
-        if not path or not os.path.exists(path):
-            display_path = path or "config.yaml"
+        if not config_path or not os.path.exists(config_path):
+            display_path = config_path or DefaultValue.CONFIG_FILENAME.value
             raise FileNotFoundError(
-                f"Nornir configuration file not found. Checked env var NORNIR_CONFIG_FILE "
+                f"Nornir configuration file not found. Checked env var {EnvVar.NORNIR_CONFIG_FILE.value} "
                 f"and local '{display_path}'."
             )
 
-        return path
+        return config_path
 
     def get(self) -> Nornir:
         """Return the active Nornir instance, initializing it if necessary.

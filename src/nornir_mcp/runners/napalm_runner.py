@@ -8,7 +8,8 @@ from typing import Any
 
 from nornir_napalm.plugins.tasks import napalm_get
 
-from ..types import MCPError
+from ..constants import ErrorType
+from ..result import Result
 from .base_runner import BaseRunner
 
 
@@ -19,9 +20,40 @@ class NapalmRunner(BaseRunner):
     operations through standardized getter methods.
     """
 
+    def execute(self, **kwargs: Any) -> Result[dict[str, Any], str]:
+        """Execute NAPALM getter operation.
+
+        Args:
+            **kwargs: Must include 'getter' key with the NAPALM getter name,
+                     and optional 'host_name' and 'group_name' for filtering
+
+        Returns:
+            Result containing either getter results or error information
+        """
+        getter_name = kwargs.get('getter')
+        host_name = kwargs.get('host_name')
+        group_name = kwargs.get('group_name')
+
+        if not getter_name:
+            return self.format_error(ErrorType.INVALID_PARAMETERS, "Getter parameter is required")
+
+        try:
+            aggregated_result = self.run_on_hosts(
+                task=napalm_get, host_name=host_name, group_name=group_name, getters=[getter_name]
+            )
+
+            # Define an extractor to pull only the specific getter data
+            def extract_getter_data(task_output: Any) -> Any:
+                return task_output.get(getter_name) if isinstance(task_output, dict) else task_output
+
+            return self.process_results(aggregated_result, extractor=extract_getter_data)
+
+        except Exception as error:
+            return self.format_error(ErrorType.EXECUTION_ERROR, str(error))
+
     def run_getter(
         self, getter: str, host_name: str | None = None, group_name: str | None = None
-    ) -> dict[str, Any] | MCPError:
+    ) -> Result[dict[str, Any], str]:
         """Execute a specific NAPALM getter against devices.
 
         Args:
@@ -30,18 +62,6 @@ class NapalmRunner(BaseRunner):
             group_name: Specific group to target, or None for all hosts
 
         Returns:
-            Dictionary containing getter results with standardized format
+            Result containing either getter results or error information
         """
-        try:
-            result = self.run_on_hosts(
-                task=napalm_get, host_name=host_name, group_name=group_name, getters=[getter]
-            )
-
-            # Define an extractor to pull only the specific getter data
-            def extract_getter(res: Any) -> Any:
-                return res.get(getter) if isinstance(res, dict) else res
-
-            return self.process_results(result, extractor=extract_getter)
-
-        except Exception as e:
-            return self.format_error("execution_error", str(e))
+        return self.execute(getter=getter, host_name=host_name, group_name=group_name)

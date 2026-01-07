@@ -26,7 +26,7 @@ def main():
     # Register Resources
     @mcp.resource("nornir://capabilities")
     def capabilities_resource() -> dict:
-        """Supported automation capabilities and getter descriptions."""
+        """Supported automation getter and getter descriptions."""
         return get_capabilities()
 
     mcp.run()

@@ -10,3 +10,15 @@ getters:
   lldp_neighbors: "Retrieved LLDP neighbor information (empty for these devices)"
   mac_address_table: "Returns the MAC address table of the device"
   lldp_neighbors_detail: "Retrieved detailed LLDP neighbor information (empty for these devices)"
+
+netmiko_commands:
+  "show version": "Display device version and system information"
+  "show running-config": "Display current device configuration"
+  "show ip interface brief": "Display interface status and IP addresses"
+  "show interfaces": "Display detailed interface statistics"
+  "show mac address-table": "Display MAC address table (switches) or show mac address (some platforms)"
+  "show arp": "Display ARP table information (use show ip arp on some platforms)"
+  "show lldp neighbors": "Display LLDP neighbor information"
+  "show inventory": "Display hardware inventory"
+  "show processes cpu": "Display system processes and CPU usage"
+  "show logging": "Display system logging information"

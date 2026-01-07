@@ -52,7 +52,7 @@ def get_inventory() -> dict[str, Any]:
         return error_response("inventory_retrieval_failed", str(e))
 
 
-def get_capabilities() -> dict[str, Any]:
+def get_getters() -> dict[str, Any]:
     """Retrieve the supported NAPALM getters and their descriptions.
 
     Returns:
@@ -70,4 +70,32 @@ def get_capabilities() -> dict[str, Any]:
             return yaml.safe_load(f)
 
     except Exception as e:
-        return error_response("capabilities_retrieval_failed", str(e))
+        return error_response("getters_retrieval_failed", str(e))
+
+
+def get_netmiko_commands() -> dict[str, Any]:
+    """Retrieve the top 10 common Netmiko CLI commands and their descriptions from the capabilities YAML.
+
+    Returns:
+        Dictionary mapping command names to human-readable descriptions.
+    """
+    try:
+        # Use importlib.resources to access the capabilities.yaml file
+        traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
+
+        if not traversable.is_file():
+            return error_response("config_missing", "capabilities.yaml not found")
+
+        with traversable.open() as f:
+            data = yaml.safe_load(f)
+
+        # Return only the netmiko_commands section
+        if "netmiko_commands" in data:
+            return {"commands": data["netmiko_commands"]}
+        else:
+            return error_response(
+                "netmiko_commands_not_found", "netmiko_commands section not found in capabilities.yaml"
+            )
+
+    except Exception as e:
+        return error_response("netmiko_commands_retrieval_failed", str(e))

@@ -9,6 +9,7 @@ class MCPError(TypedDict):
 
 class NapalmResult(TypedDict):
     """Standardized successful result for a NAPALM getter execution."""
+
     backend: str
     getter: str
     target: str
@@ -17,6 +18,7 @@ class NapalmResult(TypedDict):
 
 class NetmikoResult(TypedDict):
     """Standardized successful result for a Netmiko command execution."""
+
     backend: str
     command: str
     target: str

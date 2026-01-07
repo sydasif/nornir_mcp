@@ -6,7 +6,7 @@ tools for network automation tasks.
 
 from fastmcp import FastMCP
 
-from nornir_mcp.resources import get_capabilities
+from nornir_mcp.resources import get_getters, get_netmiko_commands
 from nornir_mcp.tools import (
     list_nornir_inventory,
     reload_nornir_inventory,
@@ -26,10 +26,15 @@ def main():
     mcp.tool(reload_nornir_inventory)
 
     # Register Resources
-    @mcp.resource("nornir://napalm_capabilities")
-    def capabilities_resource() -> dict:
+    @mcp.resource("nornir://napalm_getters")
+    def napalm_getters_resource() -> dict:
         """Supported NAPALM getters and descriptions."""
-        return get_capabilities()
+        return get_getters()
+
+    @mcp.resource("nornir://netmiko_commands")
+    def netmiko_commands_resource() -> dict:
+        """Top 10 common Netmiko CLI commands and descriptions."""
+        return get_netmiko_commands()
 
     mcp.run()
 

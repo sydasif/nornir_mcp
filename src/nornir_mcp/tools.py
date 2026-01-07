@@ -20,7 +20,7 @@ def run_napalm_getter(
     """Generic tool to run a getter on a network device using NAPALM.
 
     Args:
-        getter: The getter to execute (check mcp resource capabilities for supported getters)
+        getter: The getter to execute (check mcp resource napalm_getters for supported getters)
         host_name: (Optional) Specific host name to target. Omit to target ALL hosts.
         group_name: (Optional) Specific group to target. Cannot be used with host_name.
 

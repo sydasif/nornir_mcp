@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import patch
 
 from nornir_mcp.result import Success
@@ -10,7 +11,7 @@ def test_run_napalm_getter_success():
         # Return a Success object instead of a plain dict
         mock_instance.run_getter.return_value = Success({"host1": "data"})
 
-        result = run_napalm_getter("facts")
+        result = asyncio.run(run_napalm_getter("facts"))
 
         assert "error" not in result
         assert result["backend"] == "napalm"
@@ -21,7 +22,7 @@ def test_run_napalm_getter_success():
 
 
 def test_run_napalm_getter_invalid_params():
-    result = run_napalm_getter("facts", host_name="h1", group_name="g1")
+    result = asyncio.run(run_napalm_getter("facts", host_name="h1", group_name="g1"))
     assert result["error"] == "invalid_parameters"
 
 
@@ -31,7 +32,7 @@ def test_run_netmiko_command_success():
         # Return a Success object instead of a plain dict
         mock_instance.run_command.return_value = Success({"host1": "output"})
 
-        result = run_netmiko_command("show version")
+        result = asyncio.run(run_netmiko_command("show version"))
 
         assert "error" not in result
         assert result["backend"] == "netmiko"
@@ -42,5 +43,5 @@ def test_run_netmiko_command_success():
 
 
 def test_run_netmiko_command_invalid_params():
-    result = run_netmiko_command("cmd", host_name="h1", group_name="g1")
+    result = asyncio.run(run_netmiko_command("cmd", host_name="h1", group_name="g1"))
     assert result["error"] == "invalid_parameters"

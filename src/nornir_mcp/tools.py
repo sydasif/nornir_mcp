@@ -7,6 +7,7 @@ All tools follow a consistent pattern: validate input, execute using appropriate
 runner, and return standardized success or error responses.
 """
 
+import asyncio
 from typing import Any
 
 from .constants import Backend, ErrorType
@@ -19,7 +20,7 @@ from .types import error_response
 from .utils import format_target, validate_target_params
 
 
-def run_napalm_getter(
+async def run_napalm_getter(
     getter: str,
     host_name: str | None = None,
     group_name: str | None = None,
@@ -57,7 +58,7 @@ def run_napalm_getter(
         return error_response(ErrorType.INVALID_PARAMETERS, str(e))
 
     runner = NapalmRunner(NornirManager.instance())
-    result = runner.run_getter(getter, host_name, group_name)
+    result = await asyncio.to_thread(runner.run_getter, getter, host_name, group_name)
 
     if isinstance(result, Success):
         return {
@@ -71,7 +72,7 @@ def run_napalm_getter(
         return error_response(result.error_type, result.message)
 
 
-def run_netmiko_command(
+async def run_netmiko_command(
     command: str,
     host_name: str | None = None,
     group_name: str | None = None,
@@ -108,7 +109,7 @@ def run_netmiko_command(
         return error_response(ErrorType.INVALID_PARAMETERS, str(e))
 
     runner = NetmikoRunner(NornirManager.instance())
-    result = runner.run_command(command, host_name, group_name)
+    result = await asyncio.to_thread(runner.run_command, command, host_name, group_name)
 
     if isinstance(result, Success):
         return {
@@ -135,7 +136,7 @@ def list_nornir_inventory() -> dict[str, Any]:
     return get_inventory()
 
 
-def reload_nornir_inventory() -> dict[str, str]:
+async def reload_nornir_inventory() -> dict[str, str]:
     """Reload the Nornir inventory from disk.
 
     Forces a reload of the inventory configuration without restarting
@@ -146,7 +147,7 @@ def reload_nornir_inventory() -> dict[str, str]:
         or an error response with 'error' and 'message' on failure.
     """
     try:
-        NornirManager.instance().reload()
+        await asyncio.to_thread(NornirManager.instance().reload)
         return {"status": "success", "message": "Inventory reloaded successfully"}
     except Exception as e:
         return error_response(ErrorType.RELOAD_FAILED, str(e))

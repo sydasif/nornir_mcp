@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from nornir.core import Nornir
 
 

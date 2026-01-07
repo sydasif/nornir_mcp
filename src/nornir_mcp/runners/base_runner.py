@@ -4,7 +4,6 @@ This module defines the base class for all network automation runners,
 providing common functionality and interface for device interaction.
 """
 
-from abc import ABC
 from collections.abc import Callable
 from typing import Any
 
@@ -16,7 +15,7 @@ from ..constants import ErrorType
 from ..types import MCPException
 
 
-class BaseRunner(ABC):
+class BaseRunner:
     """Abstract base class for network automation runners.
 
     Provides common functionality for filtering hosts and formatting

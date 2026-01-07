@@ -73,15 +73,20 @@ def test_reset_nornir():
         # Reset the global instance before the test within the mock context
         reset_nornir()
 
-        # First call to get_nornir
+        # First call to get_nornir - assigning to variable to avoid linter error
+        # The call is used to initialize and for counting the call
         result1 = get_nornir()
         call_count_after_first = mock_init_nornir.call_count
 
         # Call reset_nornir to recreate the instance
         reset_nornir()
 
-        # Second call to get_nornir after reset
+        # Second call to get_nornir after reset - assigning to variable to avoid linter error
         result2 = get_nornir()
+
+        # Verify that the results are valid Nornir instances (side effect verification)
+        assert result1 is not None
+        assert result2 is not None
 
         # After reset, InitNornir should be called again
         assert mock_init_nornir.call_count >= call_count_after_first + 1

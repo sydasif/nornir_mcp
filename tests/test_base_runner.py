@@ -1,33 +1,32 @@
 from unittest.mock import MagicMock
 
 import pytest
+from nornir.core import Nornir
 
 from nornir_mcp.constants import ErrorType
-from nornir.core import Nornir
 from nornir_mcp.runners.base_runner import BaseRunner
+from nornir_mcp.types import MCPException
 
 
-class ConcreteRunner(BaseRunner):
-    def execute(self, **kwargs):
-        return {"data": "test"}
+class TestRunner(BaseRunner):
+    """Concrete implementation of BaseRunner for testing purposes."""
+
+    pass
 
 
-def test_concrete_runner_instantiation():
-    """Test that a concrete implementation can be instantiated."""
+def test_base_runner_instantiation():
+    """Test that BaseRunner can be instantiated directly now that it's not abstract."""
     nornir_instance = MagicMock(spec=Nornir)
-    runner = ConcreteRunner(nornir_instance)
+    runner = TestRunner(nornir_instance)
     assert isinstance(runner, BaseRunner)
 
 
 def test_process_results_no_hosts(mock_nornir):
-    runner = ConcreteRunner(mock_nornir)
+    runner = TestRunner(mock_nornir)
     # Now process_results raises an exception instead of returning a Result
-    from nornir_mcp.types import MCPException
 
-    try:
-        result = runner.process_results({})
-        # If we reach this line, the exception wasn't raised
-        assert False, "Expected MCPException was not raised"
-    except MCPException as e:
-        assert e.error_type == ErrorType.NO_HOSTS  # Compare to string value, not enum
-        assert e.message == "No hosts found for the given target."
+    with pytest.raises(MCPException) as exc_info:
+        runner.process_results({})
+
+    assert exc_info.value.error_type == ErrorType.NO_HOSTS  # Compare to string value, not enum
+    assert exc_info.value.message == "No hosts found for the given target."

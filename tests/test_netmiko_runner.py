@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from nornir.core import Nornir
 from nornir_mcp.runners.netmiko_runner import NetmikoRunner
 
 

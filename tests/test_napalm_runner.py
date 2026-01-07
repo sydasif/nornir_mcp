@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock, patch
 
-from nornir.core import Nornir
 from nornir.core.task import AggregatedResult, MultiResult, Result
 
 from nornir_mcp.runners.napalm_runner import NapalmRunner

@@ -1,7 +1,7 @@
 """Tools module for Nornir MCP server.
 
 This module contains the core tool definitions that are exposed to the MCP
-server. It delegates execution to specific Runners (NAPALM, etc) for
+server. It delegates execution to specific Runners (NAPALM, Netmiko) for
 performing network automation tasks.
 """
 
@@ -10,28 +10,16 @@ from typing import Any
 from .nornir_init import nornir_manager
 from .resources import get_inventory
 from .runners.napalm_runner import NapalmRunner
-from .runners.registry import RunnerRegistry
+from .runners.netmiko_runner import NetmikoRunner
 from .types import MCPError, error_response
-
-_registry: RunnerRegistry | None = None
-
-
-def get_registry() -> RunnerRegistry:
-    """Get the runner registry, initializing it if necessary."""
-    global _registry
-    if _registry is None:
-        _registry = RunnerRegistry()
-        _registry.register("napalm", NapalmRunner(nornir_manager))
-    return _registry
 
 
 def run_napalm_getter(
-    backend: str, getter: str, host_name: str | None = None, group_name: str | None = None
+    getter: str, host_name: str | None = None, group_name: str | None = None
 ) -> dict[str, Any] | MCPError:
-    """Generic tool to run a getter on a network device.
+    """Generic tool to run a getter on a network device using NAPALM.
 
     Args:
-        backend: The automation backend to use ('napalm')
         getter: The getter to execute (check mcp resource capabilities for supported getters)
         host_name: (Optional) Specific host name to target. Omit to target ALL hosts.
         group_name: (Optional) Specific group to target. Cannot be used with host_name.
@@ -43,8 +31,7 @@ def run_napalm_getter(
         return error_response("invalid_parameters", "Cannot specify both host_name and group_name")
 
     try:
-        registry = get_registry()
-        runner = registry.get(backend)
+        runner = NapalmRunner(nornir_manager)
         raw_result = runner.run_getter(getter, host_name, group_name)
 
         # Check if runner returned an error
@@ -53,13 +40,46 @@ def run_napalm_getter(
 
         target = host_name or f"group:{group_name}" or "all"
         return {
-            "backend": backend,
+            "backend": "napalm",
             "getter": getter,
             "target": target,
             "data": raw_result,
         }
-    except KeyError as e:
-        return error_response("unknown_backend", str(e).strip("'"))
+    except Exception as e:
+        return error_response("tool_error", str(e))
+
+
+def run_netmiko_command(
+    command: str, host_name: str | None = None, group_name: str | None = None
+) -> dict[str, Any] | MCPError:
+    """Run a CLI command on network devices using Netmiko.
+
+    Args:
+        command: The command to execute
+        host_name: (Optional) Specific host name to target. Omit to target ALL hosts.
+        group_name: (Optional) Specific group to target. Cannot be used with host_name.
+
+    Returns:
+        Dictionary containing the command results
+    """
+    if host_name and group_name:
+        return error_response("invalid_parameters", "Cannot specify both host_name and group_name")
+
+    try:
+        runner = NetmikoRunner(nornir_manager)
+        raw_result = runner.run_command(command, host_name, group_name)
+
+        # Check if runner returned an error
+        if isinstance(raw_result, dict) and "error" in raw_result:
+            return raw_result  # Already formatted as MCPError
+
+        target = host_name or f"group:{group_name}" or "all"
+        return {
+            "backend": "netmiko",
+            "command": command,
+            "target": target,
+            "data": raw_result,
+        }
     except Exception as e:
         return error_response("tool_error", str(e))
 

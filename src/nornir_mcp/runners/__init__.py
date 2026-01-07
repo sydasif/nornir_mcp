@@ -7,6 +7,6 @@ a common interface.
 
 from .base_runner import BaseRunner
 from .napalm_runner import NapalmRunner
-from .registry import RunnerRegistry
+from .netmiko_runner import NetmikoRunner
 
-__all__ = ["BaseRunner", "NapalmRunner", "RunnerRegistry"]
+__all__ = ["BaseRunner", "NapalmRunner", "NetmikoRunner"]

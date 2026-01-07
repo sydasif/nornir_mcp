@@ -11,6 +11,7 @@ from nornir_mcp.tools import (
     list_nornir_inventory,
     reload_nornir_inventory,
     run_napalm_getter,
+    run_netmiko_command,
 )
 
 
@@ -21,6 +22,7 @@ def main():
     # Register Tools
     mcp.tool(list_nornir_inventory)
     mcp.tool(run_napalm_getter)
+    mcp.tool(run_netmiko_command)
     mcp.tool(reload_nornir_inventory)
 
     # Register Resources

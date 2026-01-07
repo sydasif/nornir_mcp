@@ -1,29 +1,39 @@
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
-import pytest
-
-from nornir_mcp.runners.base_runner import BaseRunner
-from nornir_mcp.tools import get_registry, run_napalm_getter
+from nornir_mcp.tools import run_napalm_getter, run_netmiko_command
 
 
-@pytest.fixture(autouse=True)
-def clean_registry():
-    """Reset registry before each test."""
-    get_registry().reset()
+def test_run_napalm_getter_success():
+    with patch("nornir_mcp.tools.NapalmRunner") as MockRunner:
+        mock_instance = MockRunner.return_value
+        mock_instance.run_getter.return_value = {"host1": "data"}
+
+        result = run_napalm_getter("get_facts")
+
+        assert "error" not in result
+        assert result["backend"] == "napalm"
+        assert result["data"] == {"host1": "data"}
+        mock_instance.run_getter.assert_called_once_with("get_facts", None, None)
 
 
-def test_run_getter_unknown_backend():
-    result = run_napalm_getter("unknown", "facts")
-    assert result["error"] == "unknown_backend"
+def test_run_napalm_getter_invalid_params():
+    result = run_napalm_getter("get_facts", host_name="h1", group_name="g1")
+    assert result["error"] == "invalid_parameters"
 
 
-def test_run_getter_success():
-    mock_runner = MagicMock(spec=BaseRunner)
-    mock_runner.run_getter.return_value = {"host1": "data"}
+def test_run_netmiko_command_success():
+    with patch("nornir_mcp.tools.NetmikoRunner") as MockRunner:
+        mock_instance = MockRunner.return_value
+        mock_instance.run_command.return_value = {"host1": "output"}
 
-    get_registry().register("mock", mock_runner)
+        result = run_netmiko_command("show version")
 
-    result = run_napalm_getter("mock", "facts")
-    assert "error" not in result
-    assert result["data"] == {"host1": "data"}
-    assert result["backend"] == "mock"
+        assert "error" not in result
+        assert result["backend"] == "netmiko"
+        assert result["data"] == {"host1": "output"}
+        mock_instance.run_command.assert_called_once_with("show version", None, None)
+
+
+def test_run_netmiko_command_invalid_params():
+    result = run_netmiko_command("cmd", host_name="h1", group_name="g1")
+    assert result["error"] == "invalid_parameters"

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Nornir MCP Server is a Model Context Protocol (MCP) server that bridges the gap between Large Language Models (LLMs) and network automation. It leverages Nornir and NAPALM to allow AI assistants to interact directly with network devices, query inventory, and retrieve real-time operational data through a standardized interface.
+Nornir MCP Server is a Model Context Protocol (MCP) server that bridges the gap between Large Language Models (LLMs) and network automation. It leverages Nornir, NAPALM, and Netmiko to allow AI assistants to interact directly with network devices, query inventory, and retrieve real-time operational data through a standardized interface.
 
 ## Architecture
 
@@ -12,7 +12,7 @@ The project follows a scalable, object-oriented design:
 
 - **FastMCP**: Handles the Model Context Protocol communication.
 - **Nornir Manager**: A singleton (`NornirManager`) that manages the Nornir lifecycle and inventory.
-- **Runners**: Modular execution layer for driver-specific tasks (e.g., `NapalmRunner`).
+- **Runners**: Modular execution layer for backend-specific tasks (e.g., `NapalmRunner`, `NetmikoRunner`).
 - **Nornir**: Manages inventory, concurrency, and device connections.
 
 ### Core Files
@@ -22,6 +22,7 @@ The project follows a scalable, object-oriented design:
 - `src/nornir_mcp/nornir_init.py`: Singleton manager for Nornir initialization.
 - `src/nornir_mcp/runners/base_runner.py`: Parent class for all automation runners.
 - `src/nornir_mcp/runners/napalm_runner.py`: NAPALM-specific task implementation.
+- `src/nornir_mcp/runners/netmiko_runner.py`: Netmiko-specific task implementation.
 
 ## Available Tools
 
@@ -30,16 +31,18 @@ The server exposes a set of simple, direct tools to the LLM:
 ### Host Management
 
 - **`list_nornir_inventory()`**
-  Lists all configured network hosts in the inventory, including hostnames, IP addresses, and platform types.
+  Lists all configured network hosts in the inventory.
 
 - **`reload_nornir_inventory()`**
   Reloads the Nornir inventory from disk.
 
-### Device Data Getter
+### Device Interaction
 
-- **`run_napalm_getter(backend: str, getter: str, host_name: str | None = None, group_name: str | None = None)`**
-  Generic tool to run a getter (e.g., facts, interfaces) on target devices using a specific backend.
-  Supports targeting individual hosts or groups of devices.
+- **`run_napalm_getter(getter: str, host_name: str | None = None, group_name: str | None = None)`**
+  Runs a NAPALM getter (e.g., facts, interfaces) on target devices.
+
+- **`run_netmiko_command(command: str, host_name: str | None = None, group_name: str | None = None)`**
+  Runs a raw CLI command on target devices using Netmiko.
 
 ## Resources
 
@@ -83,6 +86,6 @@ uv run pyright
 ## Key Patterns
 
 - **Singleton Pattern**: `NornirManager.instance()` ensures only one Nornir instance exists.
-- **Runner Pattern**: Driver-specific logic is encapsulated in runner classes inheriting from `BaseRunner`.
+- **Runner Pattern**: Backend-specific logic is encapsulated in runner classes inheriting from `BaseRunner`.
 - **Explicit Type Hints**: All tool functions must have explicit return type hints (e.g., `-> dict[str, Any]`) for better MCP schema generation.
-- **Read-Only Design**: Primary focus is on operational data retrieval.
+- **Read-Only by Default**: `run_napalm_getter` is read-only. `run_netmiko_command` can be used for configuration.

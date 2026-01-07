@@ -32,7 +32,8 @@ def run_napalm_getter(
 
     Args:
         getter: The getter to execute (e.g., 'facts', 'interfaces', 'config').
-            Check the 'nornir://napalm_getters' resource for supported getters.
+            Can be any NAPALM-compliant getter string, not just those in the resource list.
+            The server validates this at runtime.
         host_name: Specific host name to target. If omitted, targets all hosts.
             Cannot be used with group_name.
         group_name: Specific group to target. If omitted, targets all hosts.
@@ -83,6 +84,7 @@ def run_netmiko_command(
 
     Args:
         command: The CLI command to execute (e.g., 'show version').
+            Warning: If the server is in READ_ONLY_MODE, dangerous configuration commands will be blocked.
         host_name: Specific host name to target. If omitted, targets all hosts.
             Cannot be used with group_name.
         group_name: Specific group to target. If omitted, targets all hosts.

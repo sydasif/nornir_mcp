@@ -126,6 +126,10 @@ def get_getters() -> dict[str, Any]:
     These getters represent the various types of data that can be retrieved
     from network devices using the NAPALM library.
 
+    **IMPORTANT:** This list is provided as a guide and is NOT exhaustive.
+    If a user requests a specific getter not in this list, attempt to run it.
+    The server will validate it dynamically.
+
     Returns:
         Dictionary mapping getter names to human-readable descriptions.
         The format is {"getters": {"getter_name": "description", ...}}.

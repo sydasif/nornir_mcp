@@ -48,6 +48,9 @@ class NapalmRunner(BaseRunner):
 
             return self.process_results(aggregated_result, extractor=extract_getter_data)
 
+        except ValueError as error:
+            # NAPALM raises ValueError for invalid getters
+            return self.format_error(ErrorType.INVALID_GETTER, str(error))
         except Exception as error:
             return self.format_error(ErrorType.EXECUTION_ERROR, str(error))
 

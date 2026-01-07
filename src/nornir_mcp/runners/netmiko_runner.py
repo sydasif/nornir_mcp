@@ -19,45 +19,6 @@ class NetmikoRunner(BaseRunner):
     using the Netmiko library.
     """
 
-    def execute(self, **kwargs: Any) -> dict[str, Any]:
-        """Execute Netmiko command operation.
-
-        Args:
-            **kwargs: Must include 'command_string' key with the command to execute,
-                     and optional 'host_name' and 'group_name' for filtering
-
-        Returns:
-            Dictionary containing command results
-
-        Raises:
-            MCPException: If the operation fails
-        """
-        command_text = kwargs.get("command_string")
-        host_name = kwargs.get("host_name")
-        group_name = kwargs.get("group_name")
-
-        if not command_text:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Command string parameter is required")
-
-        # Extract additional kwargs for the Netmiko task
-        netmiko_kwargs = {
-            k: v for k, v in kwargs.items() if k not in ["command_string", "host_name", "group_name"]
-        }
-
-        try:
-            aggregated_result = self.run_on_hosts(
-                task=netmiko_send_command,
-                host_name=host_name,
-                group_name=group_name,
-                command_string=command_text,
-                **netmiko_kwargs,
-            )
-
-            return self.process_results(aggregated_result)
-
-        except Exception as error:
-            self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
-
     def run_command(
         self,
         command_string: str,
@@ -79,6 +40,18 @@ class NetmikoRunner(BaseRunner):
         Raises:
             MCPException: If the operation fails
         """
-        all_kwargs = {"command_string": command_string, "host_name": host_name, "group_name": group_name}
-        all_kwargs.update(kwargs)
-        return self.execute(**all_kwargs)
+        if not command_string:
+            self.raise_error(ErrorType.INVALID_PARAMETERS, "Command string parameter is required")
+
+        try:
+            aggregated_result = self.run_on_hosts(
+                task=netmiko_send_command,
+                host_name=host_name,
+                group_name=group_name,
+                command_string=command_string,
+                **kwargs,
+            )
+
+            return self.process_results(aggregated_result)
+        except Exception as error:
+            self.raise_error(ErrorType.EXECUTION_ERROR, str(error))

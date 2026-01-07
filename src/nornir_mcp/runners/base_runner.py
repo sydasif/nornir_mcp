@@ -4,7 +4,7 @@ This module defines the base class for all network automation runners,
 providing common functionality and interface for device interaction.
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Callable
 from typing import Any
 
@@ -19,9 +19,8 @@ from ..types import MCPException
 class BaseRunner(ABC):
     """Abstract base class for network automation runners.
 
-    All runners must implement the execute() method which performs
-    their backend-specific operations. Provides common functionality
-    for filtering hosts and formatting standardized error responses.
+    Provides common functionality for filtering hosts and formatting
+    standardized error responses.
     """
 
     def __init__(self, nornir: Nornir):
@@ -31,24 +30,6 @@ class BaseRunner(ABC):
             nornir: The Nornir instance to use for Nornir operations
         """
         self.nornir = nornir
-
-    @abstractmethod
-    def execute(self, **kwargs: Any) -> dict[str, Any]:
-        """Execute backend-specific operation.
-
-        Subclasses must implement this method to define their
-        primary execution logic.
-
-        Args:
-            **kwargs: Backend-specific parameters
-
-        Returns:
-            Dictionary containing execution results
-
-        Raises:
-            MCPException: If the operation fails
-        """
-        pass
 
     def run_on_hosts(
         self,

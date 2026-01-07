@@ -7,6 +7,7 @@ from .constants import ErrorType
 
 class MCPException(Exception):
     """Custom exception for MCP errors."""
+
     def __init__(self, error_type: str, message: str):
         self.error_type = error_type
         self.message = message

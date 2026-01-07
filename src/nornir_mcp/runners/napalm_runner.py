@@ -30,9 +30,9 @@ class NapalmRunner(BaseRunner):
         Returns:
             Result containing either getter results or error information
         """
-        getter_name = kwargs.get('getter')
-        host_name = kwargs.get('host_name')
-        group_name = kwargs.get('group_name')
+        getter_name = kwargs.get("getter")
+        host_name = kwargs.get("host_name")
+        group_name = kwargs.get("group_name")
 
         if not getter_name:
             return self.format_error(ErrorType.INVALID_PARAMETERS, "Getter parameter is required")

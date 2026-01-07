@@ -184,7 +184,7 @@ def get_netmiko_commands() -> dict[str, Any]:
         else:
             return error_response(
                 ErrorType.NETMIKO_COMMANDS_NOT_FOUND,
-                "netmiko_commands section not found in capabilities.yaml"
+                "netmiko_commands section not found in capabilities.yaml",
             )
 
     except Exception as e:

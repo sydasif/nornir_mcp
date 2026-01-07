@@ -1,12 +1,14 @@
 from unittest.mock import patch
 
+from nornir_mcp.result import Success
 from nornir_mcp.tools import run_napalm_getter, run_netmiko_command
 
 
 def test_run_napalm_getter_success():
     with patch("nornir_mcp.tools.NapalmRunner") as MockRunner:
         mock_instance = MockRunner.return_value
-        mock_instance.run_getter.return_value = {"host1": "data"}
+        # Return a Success object instead of a plain dict
+        mock_instance.run_getter.return_value = Success({"host1": "data"})
 
         result = run_napalm_getter("facts")
 
@@ -26,7 +28,8 @@ def test_run_napalm_getter_invalid_params():
 def test_run_netmiko_command_success():
     with patch("nornir_mcp.tools.NetmikoRunner") as MockRunner:
         mock_instance = MockRunner.return_value
-        mock_instance.run_command.return_value = {"host1": "output"}
+        # Return a Success object instead of a plain dict
+        mock_instance.run_command.return_value = Success({"host1": "output"})
 
         result = run_netmiko_command("show version")
 

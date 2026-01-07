@@ -97,7 +97,7 @@ class BaseRunner(ABC):
                 # but include the error in the data for that specific host
                 processed_data[hostname] = {
                     "error": ErrorType.EXECUTION_FAILED,
-                    "message": str(primary_task.exception)
+                    "message": str(primary_task.exception),
                 }
             else:
                 task_output = primary_task.result

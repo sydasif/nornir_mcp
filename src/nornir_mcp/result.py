@@ -6,15 +6,16 @@ improving type safety and making error handling more predictable throughout the 
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar
 
-T = TypeVar('T')
-E = TypeVar('E')
+T = TypeVar("T")
+E = TypeVar("E")
 
 
 @dataclass
 class Success(Generic[T]):
     """Represents a successful operation result."""
+
     value: T
 
     def is_success(self) -> bool:
@@ -50,6 +51,7 @@ class Success(Generic[T]):
 @dataclass
 class Error(Generic[E]):
     """Represents a failed operation result."""
+
     error_type: str
     message: str
 
@@ -83,7 +85,7 @@ class Error(Generic[E]):
 
 
 # Type alias for convenience
-Result = Union[Success[T], Error[E]]
+Result = Success[T] | Error[E]
 
 
 def success(value: T) -> Success[T]:
@@ -94,5 +96,3 @@ def success(value: T) -> Success[T]:
 def error(error_type: str, message: str) -> Error[str]:
     """Create an Error result with the given error type and message."""
     return Error(error_type, message)
-
-

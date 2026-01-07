@@ -70,7 +70,7 @@ def run_napalm_getter(
             if getter not in valid_getters:
                 return error_response(
                     ErrorType.INVALID_GETTER,
-                    f"Unknown getter '{getter}'. Valid getters: {', '.join(valid_getters.keys())}"
+                    f"Unknown getter '{getter}'. Valid getters: {', '.join(valid_getters.keys())}",
                 )
         else:
             # If we can't validate, warn but continue (fail gracefully)
@@ -139,12 +139,12 @@ def run_netmiko_command(
             return error_response(ErrorType.INVALID_COMMAND, "Command must be a non-empty string")
 
         # Basic validation to prevent command injection
-        dangerous_patterns = [';', '&&', '||', '|', '`', '$(']
+        dangerous_patterns = [";", "&&", "||", "|", "`", "$("]
         for pattern in dangerous_patterns:
             if pattern in command:
                 return error_response(
                     ErrorType.INVALID_COMMAND,
-                    f"Command contains potentially dangerous character sequence: {pattern}"
+                    f"Command contains potentially dangerous character sequence: {pattern}",
                 )
 
         valid_commands_data = get_netmiko_commands()

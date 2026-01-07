@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from nornir.core.task import AggregatedResult, MultiResult, Result
 
+from nornir_mcp.result import Success
 from nornir_mcp.runners.napalm_runner import NapalmRunner
 
 
@@ -22,7 +23,9 @@ def test_run_getter_success(mock_manager):
 
     with patch.object(runner, "run_on_hosts", return_value=mock_result):
         result = runner.run_getter("facts", "device1")
-        assert result == {"device1": "some_facts"}
+        # The result is now wrapped in a Success object
+        assert isinstance(result, Success)
+        assert result.value == {"device1": "some_facts"}
 
 
 def test_run_getter_extraction(mock_manager):
@@ -41,4 +44,6 @@ def test_run_getter_extraction(mock_manager):
     with patch.object(runner, "run_on_hosts", return_value=mock_result):
         # We asked for 'facts', so we should only get 'target'
         result = runner.run_getter("facts")
-        assert result == {"device1": "target"}
+        # The result is now wrapped in a Success object
+        assert isinstance(result, Success)
+        assert result.value == {"device1": "target"}

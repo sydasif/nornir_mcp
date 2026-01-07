@@ -30,16 +30,17 @@ class NetmikoRunner(BaseRunner):
         Returns:
             Result containing either command results or error information
         """
-        command_text = kwargs.get('command_string')
-        host_name = kwargs.get('host_name')
-        group_name = kwargs.get('group_name')
+        command_text = kwargs.get("command_string")
+        host_name = kwargs.get("host_name")
+        group_name = kwargs.get("group_name")
 
         if not command_text:
             return self.format_error(ErrorType.INVALID_PARAMETERS, "Command string parameter is required")
 
         # Extract additional kwargs for the Netmiko task
-        netmiko_kwargs = {k: v for k, v in kwargs.items()
-                          if k not in ['command_string', 'host_name', 'group_name']}
+        netmiko_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["command_string", "host_name", "group_name"]
+        }
 
         try:
             aggregated_result = self.run_on_hosts(
@@ -73,6 +74,6 @@ class NetmikoRunner(BaseRunner):
         Returns:
             Result containing command results or error information
         """
-        all_kwargs = {'command_string': command_string, 'host_name': host_name, 'group_name': group_name}
+        all_kwargs = {"command_string": command_string, "host_name": host_name, "group_name": group_name}
         all_kwargs.update(kwargs)
         return self.execute(**all_kwargs)

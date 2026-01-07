@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from nornir_mcp.result import Success
 from nornir_mcp.runners.netmiko_runner import NetmikoRunner
 
 
@@ -37,7 +38,9 @@ def test_run_command_success(runner, mock_manager):
 
     result = runner.run_command("show version")
 
-    assert result == {"host1": "command output"}
+    # The result is now wrapped in a Success object
+    assert isinstance(result, Success)
+    assert result.value == {"host1": "command output"}
     mock_nornir.run.assert_called_once()
 
     # Check arguments passed to run
@@ -60,9 +63,12 @@ def test_run_command_failure(runner, mock_manager):
 
     result = runner.run_command("show version")
 
-    assert "host1" in result
-    assert result["host1"]["error"] == "execution_failed"
-    assert "Connection error" in result["host1"]["message"]
+    # The result is now wrapped in a Success object, but contains error info for the host
+    assert isinstance(result, Success)
+    result_value = result.value
+    assert "host1" in result_value
+    assert result_value["host1"]["error"] == "execution_failed"
+    assert "Connection error" in result_value["host1"]["message"]
 
 
 def test_run_command_kwargs(runner, mock_manager):

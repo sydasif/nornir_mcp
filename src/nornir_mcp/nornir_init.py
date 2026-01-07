@@ -105,5 +105,3 @@ class NornirManager:
                 self._nornir = InitNornir(config_file=self._config_file)
             except Exception as e:
                 raise RuntimeError(f"Failed to reload Nornir: {e}") from e
-
-

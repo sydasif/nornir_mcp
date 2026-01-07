@@ -1,18 +1,14 @@
 from unittest.mock import MagicMock
 
-import pytest
-
+from nornir_mcp.constants import ErrorType
 from nornir_mcp.nornir_init import NornirManager
+from nornir_mcp.result import Success
 from nornir_mcp.runners.base_runner import BaseRunner
-from nornir_mcp.types import MCPError
 
 
 class ConcreteRunner(BaseRunner):
-    def run_getter(self, getter: str, hostname: str | None = None) -> dict | MCPError:
-        return {"data": "test"}
-
-
-
+    def execute(self, **kwargs):
+        return Success({"data": "test"})
 
 
 def test_concrete_runner_instantiation():
@@ -25,7 +21,7 @@ def test_concrete_runner_instantiation():
 def test_process_results_no_hosts(mock_manager):
     runner = ConcreteRunner(mock_manager)
     result = runner.process_results({})
-    assert result == {
-        "error": "no_hosts",
-        "message": "No hosts found for the given target.",
-    }
+    # The result is now wrapped in an Error object
+    assert result.is_error()
+    assert result.error_type == ErrorType.NO_HOSTS
+    assert result.message == "No hosts found for the given target."

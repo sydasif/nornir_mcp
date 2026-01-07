@@ -2,6 +2,17 @@
 
 Provides data-centric resources for the MCP server, allowing LLMs to
 inspect the environment and capabilities before taking action.
+
+This module contains functions that return structured data about
+network device capabilities and inventory information. The resources
+are designed to be consumed by Language Learning Models (LLMs) to
+understand what operations are possible before executing network tasks.
+
+Example:
+    Get available NAPALM getters::
+
+        from nornir_mcp.resources import get_getters
+        getters = get_getters()
 """
 
 from importlib import resources
@@ -16,9 +27,37 @@ from .types import error_response
 def get_inventory() -> dict[str, Any]:
     """Retrieve the current Nornir inventory details.
 
+    Fetches comprehensive information about all configured network hosts
+    and groups from the Nornir inventory. This includes host names,
+    IP addresses, platform types, and group memberships.
+
     Returns:
         Dictionary containing all hosts with their basic information
         (name, IP address, platform) and groups information.
+
+        The returned dictionary has the format:
+        {
+            "hosts": {
+                "hostname": {
+                    "name": str,
+                    "ip": str,
+                    "platform": str,
+                    "groups": list[str]
+                }
+            },
+            "groups": {
+                "groupname": {
+                    "name": str,
+                    "platform": str,
+                    "hosts": list[str]
+                }
+            },
+            "total_hosts": int,
+            "total_groups": int
+        }
+
+    Raises:
+        Exception: If inventory retrieval fails due to configuration issues
     """
     try:
         nr = nornir_manager.get()
@@ -55,8 +94,24 @@ def get_inventory() -> dict[str, Any]:
 def get_getters() -> dict[str, Any]:
     """Retrieve the supported NAPALM getters and their descriptions.
 
+    Fetches all available NAPALM getters from the capabilities.yaml file.
+    These getters represent the various types of data that can be retrieved
+    from network devices using the NAPALM library.
+
     Returns:
         Dictionary mapping getter names to human-readable descriptions.
+        The format is {"getters": {"getter_name": "description", ...}}.
+
+        Example:
+            {
+                "getters": {
+                    "facts": "Retrieved device information...",
+                    "interfaces": "Retrieved interface details..."
+                }
+            }
+
+    Raises:
+        Exception: If capabilities.yaml file is not found or cannot be read
     """
     try:
         # Use importlib.resources to access the capabilities.yaml file
@@ -76,8 +131,24 @@ def get_getters() -> dict[str, Any]:
 def get_netmiko_commands() -> dict[str, Any]:
     """Retrieve the top 10 common Netmiko CLI commands and their descriptions from the capabilities YAML.
 
+    Fetches common network CLI commands that can be executed on devices
+    using the Netmiko library. These commands represent frequently used
+    operational commands for network device interaction.
+
     Returns:
         Dictionary mapping command names to human-readable descriptions.
+        The format is {"commands": {"command_name": "description", ...}}.
+
+        Example:
+            {
+                "commands": {
+                    "show version": "Display device version and system information",
+                    "show running-config": "Display current device configuration"
+                }
+            }
+
+    Raises:
+        Exception: If capabilities.yaml file is not found or cannot be read
     """
     try:
         # Use importlib.resources to access the capabilities.yaml file

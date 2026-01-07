@@ -2,6 +2,14 @@
 
 This module initializes and runs the MCP server, registering all available
 tools for network automation tasks.
+
+Example:
+    Run the server directly::
+
+        uv run nornir-mcp
+
+Attributes:
+    mcp: FastMCP instance that handles the Model Context Protocol communication.
 """
 
 from fastmcp import FastMCP
@@ -16,7 +24,26 @@ from nornir_mcp.tools import (
 
 
 def main():
-    """Initialize and run the Nornir MCP server."""
+    """Initialize and run the Nornir MCP server.
+
+    Sets up the FastMCP server instance and registers all available tools
+    and resources for network automation tasks. The server provides
+    standardized interfaces for interacting with network devices via
+    NAPALM getters and Netmiko commands.
+
+    The server registers the following tools:
+        - list_nornir_inventory: List configured network hosts
+        - run_napalm_getter: Execute NAPALM getters on devices
+        - run_netmiko_command: Execute CLI commands on devices
+        - reload_nornir_inventory: Reload inventory from disk
+
+    The server registers the following resources:
+        - nornir://napalm_getters: Available NAPALM getters
+        - nornir://netmiko_commands: Common Netmiko CLI commands
+
+    Raises:
+        Exception: If server initialization fails
+    """
     mcp = FastMCP("nornir-mcp")
 
     # Register Tools

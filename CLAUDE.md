@@ -46,8 +46,11 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ## Resources
 
-- **`nornir://capabilities`**
+- **`nornir://napalm_getters`**
   Returns the list of valid NAPALM getters supported by the server.
+
+- **`nornir://netmiko_commands`**
+  Returns the list of common Netmiko CLI commands and their descriptions.
 
 ## Configuration
 

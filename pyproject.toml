@@ -73,6 +73,7 @@ extend-ignore = [
     # Allow assert in tests
     "S101",  # Use of assert detected
     "PLW0603",  # Global statement is discouraged (needed for singleton pattern)
+    "B024",  # Allow ABC without abstract methods for BaseRunner design
 ]
 
 [tool.ruff.lint.per-file-ignores]

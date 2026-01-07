@@ -76,7 +76,7 @@ The server provides dedicated tools for NAPALM getters and Netmiko commands.
   Executes a specific NAPALM getter on a target device to retrieve structured data.
 
   **Arguments:**
-  * `getter`: The specific data to fetch (e.g., `"facts"`, `"interfaces"`, `"arp_table"`). See `nornir://napalm_capabilities` for a full list.
+  * `getter`: The specific data to fetch (e.g., `"facts"`, `"interfaces"`, `"arp_table"`). See `nornir://napalm_getters` for a full list.
   * `host_name`: (Optional) The specific device to target. If omitted, runs against all devices.
   * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
 
@@ -112,8 +112,11 @@ run_netmiko_command(command="show tech-support", host_name="firewall-01", enable
 
 The server exposes dynamic resources to help discover capabilities:
 
-* **`nornir://napalm_capabilities`**
+* **`nornir://napalm_getters`**
   Returns a list of all valid getter names supported by the NAPALM runner. This is useful for knowing what can be passed to the `run_napalm_getter` tool.
+
+* **`nornir://netmiko_commands`**
+  Returns a list of common Netmiko CLI commands and their descriptions. This is useful for knowing what commands can be passed to the `run_netmiko_command` tool.
 
 ## Security & Testing
 

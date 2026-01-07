@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from nornir_mcp.constants import ErrorType
-from nornir_mcp.nornir_init import NornirManager
+from nornir.core import Nornir
 from nornir_mcp.runners.base_runner import BaseRunner
 
 
@@ -14,13 +14,13 @@ class ConcreteRunner(BaseRunner):
 
 def test_concrete_runner_instantiation():
     """Test that a concrete implementation can be instantiated."""
-    manager = MagicMock(spec=NornirManager)
-    runner = ConcreteRunner(manager)
+    nornir_instance = MagicMock(spec=Nornir)
+    runner = ConcreteRunner(nornir_instance)
     assert isinstance(runner, BaseRunner)
 
 
-def test_process_results_no_hosts(mock_manager):
-    runner = ConcreteRunner(mock_manager)
+def test_process_results_no_hosts(mock_nornir):
+    runner = ConcreteRunner(mock_nornir)
     # Now process_results raises an exception instead of returning a Result
     from nornir_mcp.types import MCPException
     try:

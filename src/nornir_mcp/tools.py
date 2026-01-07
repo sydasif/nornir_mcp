@@ -11,7 +11,7 @@ import asyncio
 from typing import Any
 
 from .constants import Backend, ErrorType
-from .nornir_init import NornirManager
+from .nornir_init import get_nornir, reset_nornir
 from .resources import get_inventory
 from .runners.napalm_runner import NapalmRunner
 from .runners.netmiko_runner import NetmikoRunner
@@ -56,7 +56,8 @@ async def run_napalm_getter(
     except ValueError as e:
         return error_response(ErrorType.INVALID_PARAMETERS, str(e))
 
-    runner = NapalmRunner(NornirManager.instance())
+    nr = get_nornir()
+    runner = NapalmRunner(nr)
     try:
         data = await asyncio.to_thread(runner.run_getter, getter, host_name, group_name)
         return {
@@ -107,7 +108,8 @@ async def run_netmiko_command(
     except ValueError as e:
         return error_response(ErrorType.INVALID_PARAMETERS, str(e))
 
-    runner = NetmikoRunner(NornirManager.instance())
+    nr = get_nornir()
+    runner = NetmikoRunner(nr)
     try:
         data = await asyncio.to_thread(runner.run_command, command, host_name, group_name)
         return {
@@ -146,7 +148,7 @@ async def reload_nornir_inventory() -> dict[str, str]:
         or an error response with 'error' and 'message' on failure.
     """
     try:
-        await asyncio.to_thread(NornirManager.instance().reload)
+        await asyncio.to_thread(reset_nornir)
         return {"status": "success", "message": "Inventory reloaded successfully"}
     except Exception as e:
         return error_response(ErrorType.RELOAD_FAILED, str(e))

@@ -1,12 +1,13 @@
 from unittest.mock import MagicMock, patch
 
+from nornir.core import Nornir
 from nornir.core.task import AggregatedResult, MultiResult, Result
 
 from nornir_mcp.runners.napalm_runner import NapalmRunner
 
 
-def test_run_getter_success(mock_manager):
-    runner = NapalmRunner(mock_manager)
+def test_run_getter_success(mock_nornir):
+    runner = NapalmRunner(mock_nornir)
 
     # Mock Nornir run result
     mock_result = MagicMock(spec=AggregatedResult)
@@ -27,8 +28,8 @@ def test_run_getter_success(mock_manager):
         assert result == {"device1": "some_facts"}
 
 
-def test_run_getter_extraction(mock_manager):
-    runner = NapalmRunner(mock_manager)
+def test_run_getter_extraction(mock_nornir):
+    runner = NapalmRunner(mock_nornir)
 
     mock_result = MagicMock(spec=AggregatedResult)
     mock_result.__len__.return_value = 1

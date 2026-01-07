@@ -1,27 +1,79 @@
 import threading
+from unittest.mock import patch
 
-from nornir_mcp.nornir_init import NornirManager
-
-
-def test_singleton_instance():
-    """Test that NornirManager is a singleton."""
-    m1 = NornirManager.instance()
-    m2 = NornirManager.instance()
-    assert m1 is m2
+from nornir_mcp.nornir_init import get_nornir, reset_nornir
 
 
-def test_thread_safe_singleton():
-    """Test thread safety of the singleton (basic check)."""
-    instances = []
+def test_get_nornir_initialization():
+    """Test that get_nornir initializes and returns a Nornir instance."""
+    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
+         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+        # Reset the global instance before the test within the mock context
+        reset_nornir()
 
-    def get_instance():
-        instances.append(NornirManager.instance())
+        mock_nornir = mock_init_nornir.return_value
+        result = get_nornir()
 
-    threads = [threading.Thread(target=get_instance) for _ in range(10)]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+        assert result is mock_nornir
+        mock_init_nornir.assert_called_once()
 
-    for i in range(1, len(instances)):
-        assert instances[i] is instances[0]
+
+def test_get_nornir_caching():
+    """Test that get_nornir returns the same instance on subsequent calls."""
+    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
+         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+        # Reset the global instance before the test within the mock context
+        reset_nornir()
+
+        result1 = get_nornir()
+        result2 = get_nornir()
+
+        assert result1 is result2
+        # InitNornir should be called only once due to caching
+        assert mock_init_nornir.call_count == 1
+
+
+def test_thread_safe_get_nornir():
+    """Test thread safety of get_nornir function."""
+    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
+         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+        # Reset the global instance before the test within the mock context
+        reset_nornir()
+
+        results = []
+
+        def get_nornir_and_store():
+            results.append(get_nornir())
+
+        threads = [threading.Thread(target=get_nornir_and_store) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        # All results should be the same instance
+        for i in range(1, len(results)):
+            assert results[i] is results[0]
+        # InitNornir should be called only once due to caching
+        assert mock_init_nornir.call_count == 1
+
+
+def test_reset_nornir():
+    """Test that reset_nornir recreates the Nornir instance."""
+    with patch('nornir_mcp.nornir_init._locate_config_file', return_value='/fake/config.yaml'), \
+         patch('nornir_mcp.nornir_init.InitNornir') as mock_init_nornir:
+        # Reset the global instance before the test within the mock context
+        reset_nornir()
+
+        # First call to get_nornir
+        result1 = get_nornir()
+        call_count_after_first = mock_init_nornir.call_count
+
+        # Call reset_nornir to recreate the instance
+        reset_nornir()
+
+        # Second call to get_nornir after reset
+        result2 = get_nornir()
+
+        # After reset, InitNornir should be called again
+        assert mock_init_nornir.call_count >= call_count_after_first + 1

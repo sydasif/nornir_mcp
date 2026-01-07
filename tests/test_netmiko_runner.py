@@ -2,22 +2,17 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from nornir.core import Nornir
 from nornir_mcp.runners.netmiko_runner import NetmikoRunner
 
 
 @pytest.fixture
-def mock_manager():
-    return MagicMock()
+def runner(mock_nornir):
+    return NetmikoRunner(mock_nornir)
 
 
-@pytest.fixture
-def runner(mock_manager):
-    return NetmikoRunner(mock_manager)
-
-
-def test_run_command_success(runner, mock_manager):
+def test_run_command_success(runner, mock_nornir):
     # Mock the Nornir run result
-    mock_nornir = mock_manager.get.return_value
     mock_agg_result = MagicMock()
     # Behave like a dictionary
     mock_agg_result.items.return_value = []
@@ -47,9 +42,8 @@ def test_run_command_success(runner, mock_manager):
     assert call_kwargs["command_string"] == "show version"
 
 
-def test_run_command_failure(runner, mock_manager):
+def test_run_command_failure(runner, mock_nornir):
     # Mock the Nornir run result failure
-    mock_nornir = mock_manager.get.return_value
     mock_agg_result = MagicMock()
     mock_agg_result.__bool__.return_value = True
 
@@ -69,8 +63,7 @@ def test_run_command_failure(runner, mock_manager):
     assert "Connection error" in result["host1"]["message"]
 
 
-def test_run_command_kwargs(runner, mock_manager):
-    mock_nornir = mock_manager.get.return_value
+def test_run_command_kwargs(runner, mock_nornir):
     mock_agg_result = MagicMock()
     mock_agg_result.__bool__.return_value = True
     mock_task_result = MagicMock()

@@ -5,7 +5,11 @@ from nornir_mcp.tools import run_napalm_getter, run_netmiko_command
 
 
 def test_run_napalm_getter_success():
-    with patch("nornir_mcp.tools.NapalmRunner") as MockRunner:
+    with patch("nornir_mcp.tools.get_nornir") as mock_get_nornir, \
+         patch("nornir_mcp.tools.NapalmRunner") as MockRunner:
+        # Mock the get_nornir function to return a mock Nornir instance
+        mock_nornir_instance = mock_get_nornir.return_value
+
         mock_instance = MockRunner.return_value
         # Return a plain dict instead of a Success object
         mock_instance.run_getter.return_value = {"host1": "data"}
@@ -18,6 +22,7 @@ def test_run_napalm_getter_success():
         assert result["target"] == "all"
         assert result["data"] == {"host1": "data"}
         mock_instance.run_getter.assert_called_once_with("facts", None, None)
+        MockRunner.assert_called_once_with(mock_nornir_instance)
 
 
 def test_run_napalm_getter_invalid_params():
@@ -26,7 +31,11 @@ def test_run_napalm_getter_invalid_params():
 
 
 def test_run_netmiko_command_success():
-    with patch("nornir_mcp.tools.NetmikoRunner") as MockRunner:
+    with patch("nornir_mcp.tools.get_nornir") as mock_get_nornir, \
+         patch("nornir_mcp.tools.NetmikoRunner") as MockRunner:
+        # Mock the get_nornir function to return a mock Nornir instance
+        mock_nornir_instance = mock_get_nornir.return_value
+
         mock_instance = MockRunner.return_value
         # Return a plain dict instead of a Success object
         mock_instance.run_command.return_value = {"host1": "output"}
@@ -39,6 +48,7 @@ def test_run_netmiko_command_success():
         assert result["target"] == "all"
         assert result["data"] == {"host1": "output"}
         mock_instance.run_command.assert_called_once_with("show version", None, None)
+        MockRunner.assert_called_once_with(mock_nornir_instance)
 
 
 def test_run_netmiko_command_invalid_params():

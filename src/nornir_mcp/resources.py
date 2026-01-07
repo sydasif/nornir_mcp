@@ -22,7 +22,7 @@ from typing import Any
 import yaml
 
 from .constants import ConfigKey, DefaultValue, ErrorType
-from .nornir_init import NornirManager
+from .nornir_init import get_nornir
 from .types import error_response
 
 
@@ -62,8 +62,7 @@ def get_inventory() -> dict[str, Any]:
         Exception: If inventory retrieval fails due to configuration issues
     """
     try:
-        manager = NornirManager.instance()
-        nr = manager.get()
+        nr = get_nornir()
 
         # Get hosts information
         hosts = {}

@@ -8,11 +8,11 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
+from nornir.core import Nornir
 from nornir.core.filter import F
 from nornir.core.task import AggregatedResult
 
 from ..constants import ErrorType
-from ..nornir_init import NornirManager
 from ..types import MCPException
 
 
@@ -24,13 +24,13 @@ class BaseRunner(ABC):
     for filtering hosts and formatting standardized error responses.
     """
 
-    def __init__(self, manager: NornirManager):
-        """Initialize the base runner with a Nornir manager instance.
+    def __init__(self, nornir: Nornir):
+        """Initialize the base runner with a Nornir instance.
 
         Args:
-            manager: The NornirManager instance to use for Nornir access
+            nornir: The Nornir instance to use for Nornir operations
         """
-        self.manager = manager
+        self.nornir = nornir
 
     @abstractmethod
     def execute(self, **kwargs: Any) -> dict[str, Any]:
@@ -68,7 +68,7 @@ class BaseRunner(ABC):
         Returns:
             AggregatedResult containing the execution results
         """
-        nr = self.manager.get()
+        nr = self.nornir
         if host_name:
             nr = nr.filter(name=host_name)
         elif group_name:

@@ -39,9 +39,8 @@ class Success(Generic[T]):
         try:
             return Success(func(self.value))
         except Exception as e:
-            # Note: This assumes E is compatible with str-based errors
-            # In practice, we'll handle this more carefully in our implementation
-            return Error(str(e))
+            # Return Error with consistent error_type and message
+            return Error("mapping_error", str(e))
 
     def map_error(self, func: Callable[[E], E]) -> "Result[T, E]":
         """Apply function to error value (no-op for Success)."""

@@ -89,6 +89,16 @@ class BaseRunner(ABC):
 
         processed_data = {}
         for hostname, multi_result in aggregated_result.items():
+            # Check if multi_result is empty to avoid IndexError
+            if len(multi_result) == 0:
+                # For individual host failures, we still return success at the aggregate level
+                # but include the error in the data for that specific host
+                processed_data[hostname] = {
+                    "error": ErrorType.EXECUTION_FAILED.value,
+                    "message": "No task results available for this host",
+                }
+                continue
+
             # Get the result from the first (and usually only) task in the list
             primary_task = multi_result[0]
 
@@ -96,7 +106,7 @@ class BaseRunner(ABC):
                 # For individual host failures, we still return success at the aggregate level
                 # but include the error in the data for that specific host
                 processed_data[hostname] = {
-                    "error": ErrorType.EXECUTION_FAILED,
+                    "error": ErrorType.EXECUTION_FAILED.value,
                     "message": str(primary_task.exception),
                 }
             else:
@@ -118,4 +128,6 @@ class BaseRunner(ABC):
         Returns:
             Error Result with the specified error type and message
         """
-        return Error(error_type, message)
+        # Ensure error_type is a string, not an enum
+        error_type_str = error_type.value if hasattr(error_type, 'value') else error_type
+        return Error(error_type_str, message)

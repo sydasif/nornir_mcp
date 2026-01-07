@@ -118,16 +118,16 @@ class BaseRunner(ABC):
 
         return Success(processed_data)
 
-    def format_error(self, error_type: str, message: str) -> Result[dict[str, Any], str]:
-        """Standardized error response.
+    def format_error(self, error_type: ErrorType | str, message: str) -> Result[dict[str, Any], str]:
+        """Create a standardized error result.
 
         Args:
-            error_type: Type of error that occurred
-            message: Error message to include in response
+            error_type: Error type enum or string identifier
+            message: Human-readable error message
 
         Returns:
             Error Result with the specified error type and message
         """
-        # Ensure error_type is a string, not an enum
-        error_type_str = error_type.value if hasattr(error_type, 'value') else error_type
+        # Convert enum to string if needed
+        error_type_str = error_type.value if isinstance(error_type, ErrorType) else error_type
         return Error(error_type_str, message)

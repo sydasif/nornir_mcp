@@ -2,6 +2,8 @@ from typing import Any
 
 from typing_extensions import TypedDict
 
+from .constants import ErrorType
+
 
 class MCPError(TypedDict):
     error: str
@@ -26,18 +28,22 @@ class NetmikoResult(TypedDict):
     data: dict[str, Any]
 
 
-def error_response(error_type: str, message: str) -> MCPError:
+def error_response(error_type: ErrorType | str, message: str) -> MCPError:
     """Create a standardized MCP error response.
 
     Args:
-        error_type: The type of error (e.g., 'not_found').
-        message: Descriptive error message.
+        error_type: The type of error - accepts ErrorType enum or string
+        message: Descriptive error message
 
     Returns:
-        A dictionary with error and message keys.
+        A dictionary with error and message keys
 
     Example:
+        >>> error_response(ErrorType.NOT_FOUND, "Host not found")
+        {'error': 'not_found', 'message': 'Host not found'}
         >>> error_response("not_found", "Host not found")
         {'error': 'not_found', 'message': 'Host not found'}
     """
-    return {"error": error_type, "message": message}
+    # Convert enum to string if needed
+    error_str = error_type.value if isinstance(error_type, ErrorType) else error_type
+    return {"error": error_str, "message": message}

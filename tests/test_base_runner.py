@@ -23,5 +23,5 @@ def test_process_results_no_hosts(mock_manager):
     result = runner.process_results({})
     # The result is now wrapped in an Error object
     assert result.is_error()
-    assert result.error_type == ErrorType.NO_HOSTS
+    assert result.error_type == ErrorType.NO_HOSTS.value  # Compare to string value, not enum
     assert result.message == "No hosts found for the given target."

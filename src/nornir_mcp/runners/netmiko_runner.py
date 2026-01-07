@@ -9,7 +9,6 @@ from typing import Any
 from nornir_netmiko.tasks import netmiko_send_command
 
 from ..constants import ErrorType
-from ..result import Result
 from .base_runner import BaseRunner
 
 
@@ -20,7 +19,7 @@ class NetmikoRunner(BaseRunner):
     using the Netmiko library.
     """
 
-    def execute(self, **kwargs: Any) -> Result[dict[str, Any], str]:
+    def execute(self, **kwargs: Any) -> dict[str, Any]:
         """Execute Netmiko command operation.
 
         Args:
@@ -28,14 +27,17 @@ class NetmikoRunner(BaseRunner):
                      and optional 'host_name' and 'group_name' for filtering
 
         Returns:
-            Result containing either command results or error information
+            Dictionary containing command results
+
+        Raises:
+            MCPException: If the operation fails
         """
         command_text = kwargs.get("command_string")
         host_name = kwargs.get("host_name")
         group_name = kwargs.get("group_name")
 
         if not command_text:
-            return self.format_error(ErrorType.INVALID_PARAMETERS, "Command string parameter is required")
+            self.raise_error(ErrorType.INVALID_PARAMETERS, "Command string parameter is required")
 
         # Extract additional kwargs for the Netmiko task
         netmiko_kwargs = {
@@ -54,7 +56,7 @@ class NetmikoRunner(BaseRunner):
             return self.process_results(aggregated_result)
 
         except Exception as error:
-            return self.format_error(ErrorType.EXECUTION_ERROR, str(error))
+            self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
 
     def run_command(
         self,
@@ -62,7 +64,7 @@ class NetmikoRunner(BaseRunner):
         host_name: str | None = None,
         group_name: str | None = None,
         **kwargs: Any,
-    ) -> Result[dict[str, Any], str]:
+    ) -> dict[str, Any]:
         """Execute a CLI command on target hosts.
 
         Args:
@@ -72,7 +74,10 @@ class NetmikoRunner(BaseRunner):
             **kwargs: Additional arguments to pass to the Nornir task
 
         Returns:
-            Result containing command results or error information
+            Dictionary containing command results
+
+        Raises:
+            MCPException: If the operation fails
         """
         all_kwargs = {"command_string": command_string, "host_name": host_name, "group_name": group_name}
         all_kwargs.update(kwargs)

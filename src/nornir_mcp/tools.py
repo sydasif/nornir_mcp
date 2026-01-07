@@ -13,10 +13,9 @@ from typing import Any
 from .constants import Backend, ErrorType
 from .nornir_init import NornirManager
 from .resources import get_inventory
-from .result import Success
 from .runners.napalm_runner import NapalmRunner
 from .runners.netmiko_runner import NetmikoRunner
-from .types import error_response
+from .types import MCPException, error_response
 from .utils import format_target, validate_target_params
 
 
@@ -58,18 +57,18 @@ async def run_napalm_getter(
         return error_response(ErrorType.INVALID_PARAMETERS, str(e))
 
     runner = NapalmRunner(NornirManager.instance())
-    result = await asyncio.to_thread(runner.run_getter, getter, host_name, group_name)
-
-    if isinstance(result, Success):
+    try:
+        data = await asyncio.to_thread(runner.run_getter, getter, host_name, group_name)
         return {
             "backend": Backend.NAPALM.value,
             "getter": getter,
             "target": format_target(host_name, group_name),
-            "data": result.value,
+            "data": data,
         }
-    else:
-        # result is Error
-        return error_response(result.error_type, result.message)
+    except MCPException as e:
+        return error_response(e.error_type, e.message)
+    except Exception as e:
+        return error_response(ErrorType.EXECUTION_ERROR, str(e))
 
 
 async def run_netmiko_command(
@@ -109,18 +108,18 @@ async def run_netmiko_command(
         return error_response(ErrorType.INVALID_PARAMETERS, str(e))
 
     runner = NetmikoRunner(NornirManager.instance())
-    result = await asyncio.to_thread(runner.run_command, command, host_name, group_name)
-
-    if isinstance(result, Success):
+    try:
+        data = await asyncio.to_thread(runner.run_command, command, host_name, group_name)
         return {
             "backend": Backend.NETMIKO.value,
             "command": command,
             "target": format_target(host_name, group_name),
-            "data": result.value,
+            "data": data,
         }
-    else:
-        # result is Error
-        return error_response(result.error_type, result.message)
+    except MCPException as e:
+        return error_response(e.error_type, e.message)
+    except Exception as e:
+        return error_response(ErrorType.EXECUTION_ERROR, str(e))
 
 
 def list_nornir_inventory() -> dict[str, Any]:

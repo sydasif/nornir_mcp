@@ -1,14 +1,15 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 from nornir_mcp.constants import ErrorType
 from nornir_mcp.nornir_init import NornirManager
-from nornir_mcp.result import Success
 from nornir_mcp.runners.base_runner import BaseRunner
 
 
 class ConcreteRunner(BaseRunner):
     def execute(self, **kwargs):
-        return Success({"data": "test"})
+        return {"data": "test"}
 
 
 def test_concrete_runner_instantiation():
@@ -20,8 +21,12 @@ def test_concrete_runner_instantiation():
 
 def test_process_results_no_hosts(mock_manager):
     runner = ConcreteRunner(mock_manager)
-    result = runner.process_results({})
-    # The result is now wrapped in an Error object
-    assert result.is_error()
-    assert result.error_type == ErrorType.NO_HOSTS.value  # Compare to string value, not enum
-    assert result.message == "No hosts found for the given target."
+    # Now process_results raises an exception instead of returning a Result
+    from nornir_mcp.types import MCPException
+    try:
+        result = runner.process_results({})
+        # If we reach this line, the exception wasn't raised
+        assert False, "Expected MCPException was not raised"
+    except MCPException as e:
+        assert e.error_type == ErrorType.NO_HOSTS.value  # Compare to string value, not enum
+        assert e.message == "No hosts found for the given target."

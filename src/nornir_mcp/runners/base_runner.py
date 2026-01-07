@@ -13,7 +13,7 @@ from nornir.core.task import AggregatedResult
 
 from ..constants import ErrorType
 from ..nornir_init import NornirManager
-from ..result import Error, Result, Success
+from ..types import MCPException
 
 
 class BaseRunner(ABC):
@@ -33,7 +33,7 @@ class BaseRunner(ABC):
         self.manager = manager
 
     @abstractmethod
-    def execute(self, **kwargs: Any) -> Result[dict[str, Any], str]:
+    def execute(self, **kwargs: Any) -> dict[str, Any]:
         """Execute backend-specific operation.
 
         Subclasses must implement this method to define their
@@ -43,7 +43,10 @@ class BaseRunner(ABC):
             **kwargs: Backend-specific parameters
 
         Returns:
-            Result containing either execution results or error information
+            Dictionary containing execution results
+
+        Raises:
+            MCPException: If the operation fails
         """
         pass
 
@@ -74,7 +77,7 @@ class BaseRunner(ABC):
 
     def process_results(
         self, aggregated_result: AggregatedResult, extractor: Callable[[Any], Any] | None = None
-    ) -> Result[dict[str, Any], str]:
+    ) -> dict[str, Any]:
         """Process Nornir AggregatedResult into a standardized format.
 
         Args:
@@ -82,10 +85,13 @@ class BaseRunner(ABC):
             extractor: Optional function to extract specific data from the result
 
         Returns:
-            Result containing either processed results or error information
+            Dictionary containing processed results
+
+        Raises:
+            MCPException: If no hosts are found for the given target
         """
         if not aggregated_result:
-            return self.format_error(ErrorType.NO_HOSTS, "No hosts found for the given target.")
+            raise MCPException(ErrorType.NO_HOSTS.value, "No hosts found for the given target.")
 
         processed_data = {}
         for hostname, multi_result in aggregated_result.items():
@@ -116,18 +122,18 @@ class BaseRunner(ABC):
                 else:
                     processed_data[hostname] = task_output
 
-        return Success(processed_data)
+        return processed_data
 
-    def format_error(self, error_type: ErrorType | str, message: str) -> Result[dict[str, Any], str]:
-        """Create a standardized error result.
+    def raise_error(self, error_type: ErrorType | str, message: str) -> None:
+        """Raise a standardized error.
 
         Args:
             error_type: Error type enum or string identifier
             message: Human-readable error message
 
-        Returns:
-            Error Result with the specified error type and message
+        Raises:
+            MCPException: With the specified error type and message
         """
         # Convert enum to string if needed
         error_type_str = error_type.value if isinstance(error_type, ErrorType) else error_type
-        return Error(error_type_str, message)
+        raise MCPException(error_type_str, message)

@@ -9,7 +9,6 @@ from typing import Any
 from nornir_napalm.plugins.tasks import napalm_get
 
 from ..constants import ErrorType
-from ..result import Result
 from .base_runner import BaseRunner
 
 
@@ -20,7 +19,7 @@ class NapalmRunner(BaseRunner):
     operations through standardized getter methods.
     """
 
-    def execute(self, **kwargs: Any) -> Result[dict[str, Any], str]:
+    def execute(self, **kwargs: Any) -> dict[str, Any]:
         """Execute NAPALM getter operation.
 
         Args:
@@ -28,14 +27,17 @@ class NapalmRunner(BaseRunner):
                      and optional 'host_name' and 'group_name' for filtering
 
         Returns:
-            Result containing either getter results or error information
+            Dictionary containing getter results
+
+        Raises:
+            MCPException: If the operation fails
         """
         getter_name = kwargs.get("getter")
         host_name = kwargs.get("host_name")
         group_name = kwargs.get("group_name")
 
         if not getter_name:
-            return self.format_error(ErrorType.INVALID_PARAMETERS, "Getter parameter is required")
+            self.raise_error(ErrorType.INVALID_PARAMETERS, "Getter parameter is required")
 
         try:
             aggregated_result = self.run_on_hosts(
@@ -50,13 +52,13 @@ class NapalmRunner(BaseRunner):
 
         except ValueError as error:
             # NAPALM raises ValueError for invalid getters
-            return self.format_error(ErrorType.INVALID_GETTER, str(error))
+            self.raise_error(ErrorType.INVALID_GETTER, str(error))
         except Exception as error:
-            return self.format_error(ErrorType.EXECUTION_ERROR, str(error))
+            self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
 
     def run_getter(
         self, getter: str, host_name: str | None = None, group_name: str | None = None
-    ) -> Result[dict[str, Any], str]:
+    ) -> dict[str, Any]:
         """Execute a specific NAPALM getter against devices.
 
         Args:
@@ -65,6 +67,9 @@ class NapalmRunner(BaseRunner):
             group_name: Specific group to target, or None for all hosts
 
         Returns:
-            Result containing either getter results or error information
+            Dictionary containing getter results
+
+        Raises:
+            MCPException: If the operation fails
         """
         return self.execute(getter=getter, host_name=host_name, group_name=group_name)

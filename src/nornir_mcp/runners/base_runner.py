@@ -10,7 +10,7 @@ from typing import Any
 
 from nornir.core import Nornir
 from nornir.core.filter import F
-from nornir.core.task import AggregatedResult
+from nornir.core.task import AggregatedResult, MultiResult
 
 from ..constants import ErrorType
 from ..types import MCPException
@@ -86,18 +86,26 @@ class BaseRunner(ABC):
                 }
                 continue
 
-            # Get the result from the first (and usually only) task in the list
-            primary_task = multi_result[0]
+            # Check if the multi_result is a MultiResult object with a failed attribute
+            # Otherwise, fall back to checking the first item's failed status
+            is_multi_result_failed = (
+                multi_result.failed
+                if isinstance(multi_result, MultiResult)
+                else (len(multi_result) > 0 and multi_result[0].failed)
+            )
 
-            if primary_task.failed:
-                # For individual host failures, we still return success at the aggregate level
-                # but include the error in the data for that specific host
+            if is_multi_result_failed:
+                # Find the actual task that failed
+                failed_task = next((r for r in multi_result if hasattr(r, "failed") and r.failed), None)
+                error_message = str(failed_task.exception) if failed_task else "Unknown execution failure"
+
                 processed_data[hostname] = {
                     "error": ErrorType.EXECUTION_FAILED.value,
-                    "message": str(primary_task.exception),
+                    "message": error_message,
                 }
             else:
-                task_output = primary_task.result
+                # Operation succeeded, safe to grab the first result
+                task_output = multi_result[0].result
                 if extractor:
                     processed_data[hostname] = extractor(task_output)
                 else:

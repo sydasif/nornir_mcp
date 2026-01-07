@@ -65,6 +65,17 @@ def test_run_command_failure(runner, mock_manager):
     assert "Connection error" in result["host1"]["message"]
 
 
-def test_run_getter_not_supported(runner):
-    result = runner.run_getter("get_facts")
-    assert result["error"] == "not_supported"
+def test_run_command_kwargs(runner, mock_manager):
+    mock_nornir = mock_manager.get.return_value
+    mock_agg_result = MagicMock()
+    mock_agg_result.__bool__.return_value = True
+    mock_task_result = MagicMock()
+    mock_task_result.failed = False
+    mock_task_result.result = "output"
+    mock_agg_result.items.return_value = [("host1", [mock_task_result])]
+    mock_nornir.run.return_value = mock_agg_result
+
+    runner.run_command("show version", enable=True)
+
+    call_kwargs = mock_nornir.run.call_args[1]
+    assert call_kwargs["enable"] is True

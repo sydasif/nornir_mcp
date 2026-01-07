@@ -76,17 +76,18 @@ The server provides dedicated tools for NAPALM getters and Netmiko commands.
   Executes a specific NAPALM getter on a target device to retrieve structured data.
 
   **Arguments:**
-  * `getter`: The specific data to fetch (e.g., `"facts"`, `"interfaces"`, `"arp_table"`). See `nornir://capabilities` for a full list.
+  * `getter`: The specific data to fetch (e.g., `"facts"`, `"interfaces"`, `"arp_table"`). See `nornir://napalm_capabilities` for a full list.
   * `host_name`: (Optional) The specific device to target. If omitted, runs against all devices.
   * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
 
-* **`run_netmiko_command(command: str, host_name: str | None = None, group_name: str | None = None)`**
+* **`run_netmiko_command(command: str, host_name: str | None = None, group_name: str | None = None, **kwargs)`**
   Executes a raw CLI command on a target device using Netmiko.
 
   **Arguments:**
   * `command`: The exact CLI command to execute (e.g., `"show version"`, `"show ip route"`).
   * `host_name`: (Optional) The specific device to target.
   * `group_name`: (Optional) The specific group to target.
+  * `**kwargs`: (Optional) Additional arguments passed directly to the Netmiko task (e.g., `enable=True`, `read_timeout=60`).
 
 **Example Usage:**
 
@@ -102,13 +103,16 @@ run_netmiko_command(command="show ip route", host_name="router-01")
 
 # Get the running configuration for all devices in the 'core' group
 run_netmiko_command(command="show running-config", group_name="core")
+
+# Send a command requiring enable mode with a custom timeout
+run_netmiko_command(command="show tech-support", host_name="firewall-01", enable=True, read_timeout=120)
 ```
 
 ### Resources
 
 The server exposes dynamic resources to help discover capabilities:
 
-* **`nornir://capabilities`**
+* **`nornir://napalm_capabilities`**
   Returns a list of all valid getter names supported by the NAPALM runner. This is useful for knowing what can be passed to the `run_napalm_getter` tool.
 
 ## Security & Testing

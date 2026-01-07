@@ -12,6 +12,8 @@ def test_run_napalm_getter_success():
 
         assert "error" not in result
         assert result["backend"] == "napalm"
+        assert result["getter"] == "get_facts"
+        assert result["target"] == "all"
         assert result["data"] == {"host1": "data"}
         mock_instance.run_getter.assert_called_once_with("get_facts", None, None)
 
@@ -30,6 +32,8 @@ def test_run_netmiko_command_success():
 
         assert "error" not in result
         assert result["backend"] == "netmiko"
+        assert result["command"] == "show version"
+        assert result["target"] == "all"
         assert result["data"] == {"host1": "output"}
         mock_instance.run_command.assert_called_once_with("show version", None, None)
 

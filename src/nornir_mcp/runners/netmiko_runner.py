@@ -24,6 +24,7 @@ class NetmikoRunner(BaseRunner):
         command_string: str,
         host_name: str | None = None,
         group_name: str | None = None,
+        **kwargs: Any,
     ) -> dict[str, Any] | MCPError:
         """Execute a CLI command on target hosts.
 
@@ -31,6 +32,7 @@ class NetmikoRunner(BaseRunner):
             command_string: The command to execute
             host_name: Specific host name to target, or None for all hosts
             group_name: Specific group to target, or None for all hosts
+            **kwargs: Additional arguments to pass to the Nornir task
 
         Returns:
             Dictionary containing command results or MCPError
@@ -41,20 +43,10 @@ class NetmikoRunner(BaseRunner):
                 host_name=host_name,
                 group_name=group_name,
                 command_string=command_string,
+                **kwargs,
             )
 
             return self.process_results(result)
 
         except Exception as e:
             return self.format_error("execution_error", str(e))
-
-    def run_getter(
-        self, getter: str, host_name: str | None = None, group_name: str | None = None
-    ) -> dict[str, Any] | MCPError:
-        """Execute a specific getter against devices.
-
-        Netmiko does not support getters in the same way as NAPALM.
-        This method is implemented to satisfy the abstract base class
-        but returns an error indicating incompatibility.
-        """
-        return self.format_error("not_supported", "Netmiko runner does not support getters.")

@@ -11,12 +11,12 @@ from .nornir_init import nornir_manager
 from .resources import get_inventory
 from .runners.napalm_runner import NapalmRunner
 from .runners.netmiko_runner import NetmikoRunner
-from .types import MCPError, error_response
+from .types import MCPError, NapalmResult, NetmikoResult, error_response
 
 
 def run_napalm_getter(
     getter: str, host_name: str | None = None, group_name: str | None = None
-) -> dict[str, Any] | MCPError:
+) -> NapalmResult | MCPError:
     """Generic tool to run a getter on a network device using NAPALM.
 
     Args:
@@ -38,7 +38,13 @@ def run_napalm_getter(
         if isinstance(raw_result, dict) and "error" in raw_result:
             return raw_result  # Already formatted as MCPError
 
-        target = host_name or f"group:{group_name}" or "all"
+        if host_name:
+            target = host_name
+        elif group_name:
+            target = f"group:{group_name}"
+        else:
+            target = "all"
+
         return {
             "backend": "napalm",
             "getter": getter,
@@ -51,7 +57,7 @@ def run_napalm_getter(
 
 def run_netmiko_command(
     command: str, host_name: str | None = None, group_name: str | None = None
-) -> dict[str, Any] | MCPError:
+) -> NetmikoResult | MCPError:
     """Run a CLI command on network devices using Netmiko.
 
     Args:
@@ -73,7 +79,13 @@ def run_netmiko_command(
         if isinstance(raw_result, dict) and "error" in raw_result:
             return raw_result  # Already formatted as MCPError
 
-        target = host_name or f"group:{group_name}" or "all"
+        if host_name:
+            target = host_name
+        elif group_name:
+            target = f"group:{group_name}"
+        else:
+            target = "all"
+
         return {
             "backend": "netmiko",
             "command": command,

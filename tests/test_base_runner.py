@@ -12,11 +12,7 @@ class ConcreteRunner(BaseRunner):
         return {"data": "test"}
 
 
-def test_base_runner_instantiation():
-    """Test that BaseRunner cannot be instantiated directly."""
-    manager = MagicMock(spec=NornirManager)
-    with pytest.raises(TypeError):
-        BaseRunner(manager)
+
 
 
 def test_concrete_runner_instantiation():

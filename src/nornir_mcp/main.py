@@ -26,9 +26,9 @@ def main():
     mcp.tool(reload_nornir_inventory)
 
     # Register Resources
-    @mcp.resource("nornir://capabilities")
+    @mcp.resource("nornir://napalm_capabilities")
     def capabilities_resource() -> dict:
-        """Supported automation getter and getter descriptions."""
+        """Supported NAPALM getters and descriptions."""
         return get_capabilities()
 
     mcp.run()

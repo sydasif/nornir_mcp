@@ -4,7 +4,7 @@ This module defines the base class for all network automation runners,
 providing common functionality and interface for device interaction.
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Callable
 from typing import Any
 
@@ -97,18 +97,3 @@ class BaseRunner(ABC):
             Dictionary containing standardized error format
         """
         return error_response(error_type, message)
-
-    @abstractmethod
-    def run_getter(
-        self, getter: str, host_name: str | None = None, group_name: str | None = None
-    ) -> dict[str, Any] | MCPError:
-        """Execute a specific getter against devices.
-
-        Args:
-            getter: The getter method to execute
-            host_name: Specific host name to target, or None for all hosts
-            group_name: Specific group to target, or None for all hosts
-
-        Returns:
-            Dictionary containing getter results with standardized format
-        """

@@ -8,18 +8,18 @@ def test_run_napalm_getter_success():
         mock_instance = MockRunner.return_value
         mock_instance.run_getter.return_value = {"host1": "data"}
 
-        result = run_napalm_getter("get_facts")
+        result = run_napalm_getter("facts")
 
         assert "error" not in result
         assert result["backend"] == "napalm"
-        assert result["getter"] == "get_facts"
+        assert result["getter"] == "facts"
         assert result["target"] == "all"
         assert result["data"] == {"host1": "data"}
-        mock_instance.run_getter.assert_called_once_with("get_facts", None, None)
+        mock_instance.run_getter.assert_called_once_with("facts", None, None)
 
 
 def test_run_napalm_getter_invalid_params():
-    result = run_napalm_getter("get_facts", host_name="h1", group_name="g1")
+    result = run_napalm_getter("facts", host_name="h1", group_name="g1")
     assert result["error"] == "invalid_parameters"
 
 

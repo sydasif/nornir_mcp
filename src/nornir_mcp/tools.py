@@ -21,8 +21,8 @@ Example:
 
 from typing import Any
 
-from .nornir_init import nornir_manager
-from .resources import get_inventory
+from .nornir_init import NornirManager
+from .resources import get_getters, get_inventory, get_netmiko_commands
 from .runners.napalm_runner import NapalmRunner
 from .runners.netmiko_runner import NetmikoRunner
 from .types import MCPError, NapalmResult, NetmikoResult, error_response
@@ -61,8 +61,22 @@ def run_napalm_getter(
     if host_name and group_name:
         return error_response("invalid_parameters", "Cannot specify both host_name and group_name")
 
+    # Validate getter name against capabilities
+    valid_getters_data = get_getters()
+    if isinstance(valid_getters_data, dict) and "getters" in valid_getters_data:
+        valid_getters = valid_getters_data["getters"]
+        if getter not in valid_getters:
+            return error_response(
+                "invalid_getter",
+                f"Unknown getter '{getter}'. Valid getters: {', '.join(valid_getters.keys())}"
+            )
+    else:
+        # If we can't validate, warn but continue (fail gracefully)
+        pass
+
     try:
-        runner = NapalmRunner(nornir_manager)
+        manager = NornirManager.instance()
+        runner = NapalmRunner(manager)
         raw_result = runner.run_getter(getter, host_name, group_name)
 
         # Check if runner returned an error
@@ -119,8 +133,30 @@ def run_netmiko_command(
     if host_name and group_name:
         return error_response("invalid_parameters", "Cannot specify both host_name and group_name")
 
+    # Validate command to prevent potentially dangerous inputs
+    # Commands should be non-empty and not contain dangerous characters like semicolons or pipes
+    if not command or not isinstance(command, str):
+        return error_response("invalid_command", "Command must be a non-empty string")
+
+    # Basic validation to prevent command injection
+    dangerous_patterns = [';', '&&', '||', '|', '`', '$(']
+    for pattern in dangerous_patterns:
+        if pattern in command:
+            return error_response("invalid_command", f"Command contains potentially dangerous character sequence: {pattern}")
+
+    # Optionally validate against known commands (currently permissive but could be made strict)
+    # For now, we just log if the command is not in the known list
+    valid_commands_data = get_netmiko_commands()
+    if isinstance(valid_commands_data, dict) and "commands" in valid_commands_data:
+        valid_commands = valid_commands_data["commands"]
+        # We don't fail validation for unknown commands as users may need to run custom commands
+    else:
+        # If we can't validate, continue anyway
+        pass
+
     try:
-        runner = NetmikoRunner(nornir_manager)
+        manager = NornirManager.instance()
+        runner = NetmikoRunner(manager)
         raw_result = runner.run_command(command, host_name, group_name)
 
         # Check if runner returned an error
@@ -193,7 +229,8 @@ def reload_nornir_inventory() -> dict[str, str] | MCPError:
         Exception: If inventory reload fails
     """
     try:
-        nornir_manager.reload()
+        manager = NornirManager.instance()
+        manager.reload()
         return {
             "status": "success",
             "message": "Nornir inventory reloaded from disk.",

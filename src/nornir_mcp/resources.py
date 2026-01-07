@@ -15,12 +15,13 @@ Example:
         getters = get_getters()
 """
 
+from functools import lru_cache
 from importlib import resources
 from typing import Any
 
 import yaml
 
-from .nornir_init import nornir_manager
+from .nornir_init import NornirManager
 from .types import error_response
 
 
@@ -60,7 +61,8 @@ def get_inventory() -> dict[str, Any]:
         Exception: If inventory retrieval fails due to configuration issues
     """
     try:
-        nr = nornir_manager.get()
+        manager = NornirManager.instance()
+        nr = manager.get()
 
         # Get hosts information
         hosts = {}
@@ -91,6 +93,31 @@ def get_inventory() -> dict[str, Any]:
         return error_response("inventory_retrieval_failed", str(e))
 
 
+@lru_cache(maxsize=1)
+def _load_capabilities() -> dict[str, Any]:
+    """Load and cache capabilities YAML (thread-safe).
+
+    This function loads the capabilities.yaml file once and caches the result
+    to avoid repeated file system operations. The cache is thread-safe due to
+    the GIL protecting the function execution.
+
+    Returns:
+        The parsed capabilities YAML data as a dictionary.
+
+    Raises:
+        Exception: If capabilities.yaml file is not found or cannot be read
+    """
+    # Use importlib.resources to access the capabilities.yaml file
+    # This is more robust than Path(__file__) for packaged applications
+    traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
+
+    if not traversable.is_file():
+        raise FileNotFoundError("capabilities.yaml not found")
+
+    with traversable.open() as f:
+        return yaml.safe_load(f)
+
+
 def get_getters() -> dict[str, Any]:
     """Retrieve the supported NAPALM getters and their descriptions.
 
@@ -114,16 +141,14 @@ def get_getters() -> dict[str, Any]:
         Exception: If capabilities.yaml file is not found or cannot be read
     """
     try:
-        # Use importlib.resources to access the capabilities.yaml file
-        # This is more robust than Path(__file__) for packaged applications
-        traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
-
-        if not traversable.is_file():
-            return error_response("config_missing", "capabilities.yaml not found")
-
-        with traversable.open() as f:
-            return yaml.safe_load(f)
-
+        capabilities = _load_capabilities()
+        # Return only the getters section
+        if "getters" in capabilities:
+            return {"getters": capabilities["getters"]}
+        else:
+            return error_response(
+                "getters_not_found", "getters section not found in capabilities.yaml"
+            )
     except Exception as e:
         return error_response("getters_retrieval_failed", str(e))
 
@@ -151,18 +176,10 @@ def get_netmiko_commands() -> dict[str, Any]:
         Exception: If capabilities.yaml file is not found or cannot be read
     """
     try:
-        # Use importlib.resources to access the capabilities.yaml file
-        traversable = resources.files("nornir_mcp.data").joinpath("capabilities.yaml")
-
-        if not traversable.is_file():
-            return error_response("config_missing", "capabilities.yaml not found")
-
-        with traversable.open() as f:
-            data = yaml.safe_load(f)
-
+        capabilities = _load_capabilities()
         # Return only the netmiko_commands section
-        if "netmiko_commands" in data:
-            return {"commands": data["netmiko_commands"]}
+        if "netmiko_commands" in capabilities:
+            return {"commands": capabilities["netmiko_commands"]}
         else:
             return error_response(
                 "netmiko_commands_not_found", "netmiko_commands section not found in capabilities.yaml"

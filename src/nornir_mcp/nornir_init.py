@@ -95,9 +95,13 @@ class NornirManager:
 
         This clears the current Nornir instance and creates a new one,
         effectively reloading the inventory from the configuration file.
+        Thread-safe implementation using double-checked locking pattern.
         """
-        self._nornir = None
-        self.get()
+        with self._lock:
+            self._config_file = self._find_config()
+            try:
+                self._nornir = InitNornir(config_file=self._config_file)
+            except Exception as e:
+                raise RuntimeError(f"Failed to reload Nornir: {e}") from e
 
 
-nornir_manager = NornirManager.instance()

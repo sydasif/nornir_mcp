@@ -81,3 +81,5 @@ extend-ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Allow asserts in test files
 "tests/**/*" = ["S101"]
+# Allow complex functions in paramiko runner that need multiple exception handlers
+"src/nornir_mcp/runners/paramiko_runner.py" = ["C901"]

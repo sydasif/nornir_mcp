@@ -1,3 +1,9 @@
+"""Tests for the Base runner module.
+
+This module contains unit tests for the BaseRunner class and its methods,
+verifying that common functionality works correctly.
+"""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -22,6 +28,15 @@ def test_base_runner_instantiation():
 
 
 def test_process_results_no_hosts(mock_nornir):
+    """Test process_results method when no hosts are found.
+
+    Verifies that the process_results method properly raises an
+    MCPException when no hosts are found for the given target.
+
+    Args:
+        mock_nornir: Mocked Nornir instance for testing
+
+    """
     runner = TestRunner(mock_nornir)
     # Now process_results raises an exception instead of returning a Result
 

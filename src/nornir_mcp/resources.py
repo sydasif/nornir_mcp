@@ -13,6 +13,7 @@ Example:
 
         from nornir_mcp.resources import get_getters
         getters = get_getters()
+
 """
 
 from functools import lru_cache
@@ -60,6 +61,7 @@ def get_inventory() -> dict[str, Any]:
 
     Raises:
         Exception: If inventory retrieval fails due to configuration issues
+
     """
     try:
         nr = get_nornir()
@@ -106,6 +108,7 @@ def _load_capabilities() -> dict[str, Any]:
 
     Raises:
         Exception: If capabilities.yaml file is not found or cannot be read
+
     """
     # Use importlib.resources to access the capabilities.yaml file
     # This is more robust than Path(__file__) for packaged applications
@@ -133,7 +136,7 @@ def get_getters() -> dict[str, Any]:
         Dictionary mapping getter names to human-readable descriptions.
         The format is {"getters": {"getter_name": "description", ...}}.
 
-        Example:
+    Example:
             {
                 "getters": {
                     "facts": "Retrieved device information...",
@@ -143,6 +146,7 @@ def get_getters() -> dict[str, Any]:
 
     Raises:
         Exception: If capabilities.yaml file is not found or cannot be read
+
     """
     try:
         capabilities = _load_capabilities()
@@ -169,7 +173,7 @@ def get_netmiko_commands() -> dict[str, Any]:
         Dictionary mapping command names to human-readable descriptions.
         The format is {"commands": {"command_name": "description", ...}}.
 
-        Example:
+    Example:
             {
                 "commands": {
                     "show version": "Display device version and system information",
@@ -179,6 +183,7 @@ def get_netmiko_commands() -> dict[str, Any]:
 
     Raises:
         Exception: If capabilities.yaml file is not found or cannot be read
+
     """
     try:
         capabilities = _load_capabilities()

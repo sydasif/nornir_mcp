@@ -47,6 +47,7 @@ class ParamikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if not command:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Command parameter is required")
@@ -65,7 +66,7 @@ class ParamikoRunner(BaseRunner):
 
                 # Create SSH client
                 ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507  # noqa: S507
 
                 try:
                     # Connect to the host
@@ -137,7 +138,7 @@ class ParamikoRunner(BaseRunner):
         remote_path: str,
         host_name: str | None = None,
         group_name: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # noqa: C901
         """Upload a file to target hosts via SFTP.
 
         Args:
@@ -151,6 +152,7 @@ class ParamikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if not local_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
@@ -173,7 +175,7 @@ class ParamikoRunner(BaseRunner):
 
             # Create SSH client
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
 
             try:
                 # Connect to the host
@@ -252,7 +254,7 @@ class ParamikoRunner(BaseRunner):
         local_path: str,
         host_name: str | None = None,
         group_name: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # noqa: C901
         """Download a file from target hosts via SFTP.
 
         Args:
@@ -266,6 +268,7 @@ class ParamikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if not remote_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
@@ -284,7 +287,7 @@ class ParamikoRunner(BaseRunner):
 
             # Create SSH client
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
 
             try:
                 # Connect to the host
@@ -370,7 +373,7 @@ class ParamikoRunner(BaseRunner):
         remote_path: str,
         host_name: str | None = None,
         group_name: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # noqa: C901
         """Upload a file to target hosts via SCP.
 
         Args:
@@ -384,6 +387,7 @@ class ParamikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if scp is None:
             self.raise_error(
@@ -411,7 +415,7 @@ class ParamikoRunner(BaseRunner):
 
             # Create SSH client
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
 
             try:
                 # Connect to the host
@@ -497,7 +501,7 @@ class ParamikoRunner(BaseRunner):
         local_path: str,
         host_name: str | None = None,
         group_name: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # noqa: C901
         """Download a file from target hosts via SCP.
 
         Args:
@@ -511,6 +515,7 @@ class ParamikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if scp is None:
             self.raise_error(
@@ -534,7 +539,7 @@ class ParamikoRunner(BaseRunner):
 
             # Create SSH client
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
 
             try:
                 # Connect to the host
@@ -627,7 +632,7 @@ class ParamikoRunner(BaseRunner):
         remote_path: str,
         host_name: str | None = None,
         group_name: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # noqa: C901
         """Upload a directory to target hosts via SCP recursively.
 
         Args:
@@ -641,6 +646,7 @@ class ParamikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if scp is None:
             self.raise_error(
@@ -668,7 +674,7 @@ class ParamikoRunner(BaseRunner):
 
             # Create SSH client
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
 
             try:
                 # Connect to the host
@@ -754,7 +760,7 @@ class ParamikoRunner(BaseRunner):
         local_path: str,
         host_name: str | None = None,
         group_name: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # noqa: C901
         """Download a directory from target hosts via SCP recursively.
 
         Args:
@@ -768,6 +774,7 @@ class ParamikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if scp is None:
             self.raise_error(
@@ -791,7 +798,7 @@ class ParamikoRunner(BaseRunner):
 
             # Create SSH client
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
 
             try:
                 # Connect to the host

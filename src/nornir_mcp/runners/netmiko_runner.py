@@ -39,6 +39,7 @@ class NetmikoRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if not command_string:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Command string parameter is required")

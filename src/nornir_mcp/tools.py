@@ -27,7 +27,21 @@ async def _run_tool(
     *args: Any,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    """Generic helper to run a Nornir tool via a runner."""
+    """Run a Nornir tool via a runner.
+
+    Args:
+        runner_cls: The runner class to instantiate
+        method_name: The method name to call on the runner
+        host_name: Target host name or None for all hosts
+        group_name: Target group name or None for all groups
+        result_meta: Metadata to include in the result
+        *args: Arguments to pass to the runner method
+        **kwargs: Keyword arguments to pass to the runner method
+
+    Returns:
+        Dictionary containing the tool execution results with metadata
+
+    """
     try:
         validate_target_params(host_name, group_name)
     except ValueError as e:
@@ -95,6 +109,7 @@ async def run_paramiko_command(
         host_name: Specific host name to target.
         group_name: Specific group to target.
         timeout: Command execution timeout in seconds (default: 30)
+
     """
     return await _run_tool(
         ParamikoRunner,
@@ -120,6 +135,7 @@ async def upload_file(
         remote_path: The destination path on the remote server.
         host_name: Specific host name to target.
         group_name: Specific group to target.
+
     """
     return await _run_tool(
         ParamikoRunner,
@@ -152,6 +168,7 @@ async def upload_directory(
         remote_path: The destination directory path on the remote server.
         host_name: Specific host name to target.
         group_name: Specific group to target.
+
     """
     return await _run_tool(
         ParamikoRunner,
@@ -184,6 +201,7 @@ async def download_file(
         local_path: The destination path on the local machine.
         host_name: Specific host name to target.
         group_name: Specific group to target.
+
     """
     return await _run_tool(
         ParamikoRunner,
@@ -216,6 +234,7 @@ async def download_directory(
         local_path: The destination directory path on the local machine.
         host_name: Specific host name to target.
         group_name: Specific group to target.
+
     """
     return await _run_tool(
         ParamikoRunner,

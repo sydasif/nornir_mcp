@@ -27,6 +27,7 @@ class BaseRunner:
 
         Args:
             nornir: The Nornir instance to use for Nornir operations
+
         """
         self.nornir = nornir
 
@@ -47,6 +48,7 @@ class BaseRunner:
 
         Returns:
             AggregatedResult containing the execution results
+
         """
         nr = self.nornir
         if host_name:
@@ -69,6 +71,7 @@ class BaseRunner:
 
         Raises:
             MCPException: If no hosts are found for the given target
+
         """
         if not aggregated_result:
             raise MCPException(ErrorType.NO_HOSTS, "No hosts found for the given target.")
@@ -121,6 +124,7 @@ class BaseRunner:
 
         Raises:
             MCPException: With the specified error type and message
+
         """
         # Convert to string (works with StrEnum, str, or other types)
         error_type_str = str(error_type)

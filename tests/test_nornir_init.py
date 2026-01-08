@@ -1,3 +1,9 @@
+"""Tests for the Nornir initialization module.
+
+This module contains unit tests for the Nornir initialization functions,
+verifying that singleton pattern and thread safety work correctly.
+"""
+
 import threading
 from unittest.mock import patch
 

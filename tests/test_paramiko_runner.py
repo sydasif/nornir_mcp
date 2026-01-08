@@ -102,6 +102,4 @@ class TestParamikoRunner:
 
 def test_import():
     """Simple test to verify the module can be imported."""
-    from nornir_mcp.runners.paramiko_runner import ParamikoRunner
-
     assert ParamikoRunner is not None

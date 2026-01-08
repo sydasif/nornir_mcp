@@ -34,6 +34,7 @@ class NapalmRunner(BaseRunner):
 
         Raises:
             MCPException: If the operation fails
+
         """
         if not getter:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Getter parameter is required")

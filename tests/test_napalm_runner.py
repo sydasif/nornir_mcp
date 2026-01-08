@@ -1,3 +1,9 @@
+"""Tests for the Napalm runner module.
+
+This module contains unit tests for the NapalmRunner class and its methods,
+verifying that NAPALM-based network operations work correctly.
+"""
+
 from unittest.mock import MagicMock, patch
 
 from nornir.core.task import AggregatedResult, MultiResult, Result
@@ -6,6 +12,15 @@ from nornir_mcp.runners.napalm_runner import NapalmRunner
 
 
 def test_run_getter_success(mock_nornir):
+    """Test successful execution of a NAPALM getter operation.
+
+    Verifies that the run_getter method properly executes and returns
+    the expected data structure when the operation succeeds.
+
+    Args:
+        mock_nornir: Mocked Nornir instance for testing
+
+    """
     runner = NapalmRunner(mock_nornir)
 
     # Mock Nornir run result
@@ -28,6 +43,15 @@ def test_run_getter_success(mock_nornir):
 
 
 def test_run_getter_extraction(mock_nornir):
+    """Test NAPALM getter result extraction functionality.
+
+    Verifies that the run_getter method properly extracts only the requested
+    data from the result when the result contains multiple fields.
+
+    Args:
+        mock_nornir: Mocked Nornir instance for testing
+
+    """
     runner = NapalmRunner(mock_nornir)
 
     mock_result = MagicMock(spec=AggregatedResult)

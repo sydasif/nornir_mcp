@@ -1,3 +1,9 @@
+"""Tests for the tools module.
+
+This module contains unit tests for the MCP tool functions,
+verifying that tool execution and error handling work correctly.
+"""
+
 from unittest.mock import patch
 
 import pytest
@@ -7,6 +13,11 @@ from nornir_mcp.tools import run_napalm_getter, run_netmiko_command
 
 @pytest.mark.asyncio
 async def test_run_napalm_getter_success():
+    """Test successful execution of the run_napalm_getter tool function.
+
+    Verifies that the tool function properly executes and returns
+    the expected result structure when the operation succeeds.
+    """
     with (
         patch("nornir_mcp.tools.get_nornir") as mock_get_nornir,
         patch("nornir_mcp.tools.NapalmRunner") as MockRunner,
@@ -25,18 +36,28 @@ async def test_run_napalm_getter_success():
         assert result["getter"] == "facts"
         assert result["target"] == "all"
         assert result["data"] == {"host1": "data"}
-        mock_instance.run_getter.assert_called_once_with("facts", None, None)
+        mock_instance.run_getter.assert_called_once_with("facts", host_name=None, group_name=None)
         MockRunner.assert_called_once_with(mock_nornir_instance)
 
 
 @pytest.mark.asyncio
 async def test_run_napalm_getter_invalid_params():
+    """Test invalid parameters handling in the run_napalm_getter tool function.
+
+    Verifies that the tool function properly validates parameters and returns
+    the expected error response when invalid parameters are provided.
+    """
     result = await run_napalm_getter("facts", host_name="h1", group_name="g1")
     assert result["error"] == "invalid_parameters"
 
 
 @pytest.mark.asyncio
 async def test_run_netmiko_command_success():
+    """Test successful execution of the run_netmiko_command tool function.
+
+    Verifies that the tool function properly executes and returns
+    the expected result structure when the operation succeeds.
+    """
     with (
         patch("nornir_mcp.tools.get_nornir") as mock_get_nornir,
         patch("nornir_mcp.tools.NetmikoRunner") as MockRunner,
@@ -55,11 +76,16 @@ async def test_run_netmiko_command_success():
         assert result["command"] == "show version"
         assert result["target"] == "all"
         assert result["data"] == {"host1": "output"}
-        mock_instance.run_command.assert_called_once_with("show version", None, None)
+        mock_instance.run_command.assert_called_once_with("show version", host_name=None, group_name=None)
         MockRunner.assert_called_once_with(mock_nornir_instance)
 
 
 @pytest.mark.asyncio
 async def test_run_netmiko_command_invalid_params():
+    """Test invalid parameters handling in the run_netmiko_command tool function.
+
+    Verifies that the tool function properly validates parameters and returns
+    the expected error response when invalid parameters are provided.
+    """
     result = await run_netmiko_command("cmd", host_name="h1", group_name="g1")
     assert result["error"] == "invalid_parameters"

@@ -1,3 +1,9 @@
+"""Tests for the Netmiko runner module.
+
+This module contains unit tests for the NetmikoRunner class and its methods,
+verifying that Netmiko-based network operations work correctly.
+"""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,10 +13,29 @@ from nornir_mcp.runners.netmiko_runner import NetmikoRunner
 
 @pytest.fixture
 def runner(mock_nornir):
+    """Create a NetmikoRunner instance for testing.
+
+    Args:
+        mock_nornir: Mocked Nornir instance for testing
+
+    Returns:
+        NetmikoRunner: A runner instance for testing
+
+    """
     return NetmikoRunner(mock_nornir)
 
 
 def test_run_command_success(runner, mock_nornir):
+    """Test successful execution of a Netmiko command operation.
+
+    Verifies that the run_command method properly executes and returns
+    the expected data structure when the operation succeeds.
+
+    Args:
+        runner: NetmikoRunner instance for testing
+        mock_nornir: Mocked Nornir instance for testing
+
+    """
     # Mock the Nornir run result
     mock_agg_result = MagicMock()
     # Behave like a dictionary
@@ -42,6 +67,16 @@ def test_run_command_success(runner, mock_nornir):
 
 
 def test_run_command_failure(runner, mock_nornir):
+    """Test Netmiko command operation when it fails.
+
+    Verifies that the run_command method properly handles and returns
+    error information when the operation fails.
+
+    Args:
+        runner: NetmikoRunner instance for testing
+        mock_nornir: Mocked Nornir instance for testing
+
+    """
     # Mock the Nornir run result failure
     mock_agg_result = MagicMock()
     mock_agg_result.__bool__.return_value = True
@@ -63,6 +98,16 @@ def test_run_command_failure(runner, mock_nornir):
 
 
 def test_run_command_kwargs(runner, mock_nornir):
+    """Test Netmiko command operation with additional keyword arguments.
+
+    Verifies that the run_command method properly passes additional
+    keyword arguments to the underlying Netmiko operation.
+
+    Args:
+        runner: NetmikoRunner instance for testing
+        mock_nornir: Mocked Nornir instance for testing
+
+    """
     mock_agg_result = MagicMock()
     mock_agg_result.__bool__.return_value = True
     mock_task_result = MagicMock()

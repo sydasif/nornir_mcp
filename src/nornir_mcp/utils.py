@@ -26,6 +26,7 @@ def format_target(host_name: str | None, group_name: str | None) -> str:
         'group:core'
         >>> format_target(None, None)
         'all'
+
     """
     if host_name:
         return host_name
@@ -48,6 +49,7 @@ def validate_target_params(host_name: str | None, group_name: str | None) -> Non
         >>> validate_target_params("host1", None)  # OK
         >>> validate_target_params(None, "group1")  # OK
         >>> validate_target_params("host1", "group1")  # Raises ValueError
+
     """
     if host_name and group_name:
         raise ValueError("Cannot specify both host_name and group_name")
@@ -64,6 +66,7 @@ def extract_single_key(data: Any, key: str) -> Any:
 
     Returns:
         Value of the key if it exists, otherwise returns the original data
+
     """
     if isinstance(data, dict) and key in data:
         return data[key]

@@ -23,6 +23,7 @@ def get_nornir() -> Nornir:
 
     Returns:
         The active Nornir instance
+
     """
     global _NORNIR_INSTANCE
 
@@ -63,6 +64,7 @@ def _locate_config_file() -> str:
 
     Raises:
         FileNotFoundError: If no configuration file is found
+
     """
     config_path = os.getenv(EnvVar.NORNIR_CONFIG_FILE)
 

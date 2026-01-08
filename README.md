@@ -18,7 +18,7 @@ The project follows a scalable, object-oriented design to ensure reliability and
 
 * **FastMCP**: Handles the Model Context Protocol communication.
 * **Nornir Manager**: A singleton lifecycle manager that handles Nornir initialization and inventory reloading.
-* **Runners**: A modular execution layer where specific backend logic (e.g., `NapalmRunner`, `NetmikoRunner`) is isolated from the core server.
+* **Runners**: A modular execution layer where specific backend logic (e.g., `NapalmRunner`, `NetmikoRunner`, `ParamikoRunner`) is isolated from the core server.
 * **Types**: Strict typing and error schemas (`MCPError`) ensure consistent and safe communication with LLMs.
 * **Result Type**: Custom `Success`/`Error` result wrapper for explicit error handling paths.
 * **Constants**: Centralized constants and enumerations for consistent error types, backends, and configuration keys.
@@ -26,6 +26,7 @@ The project follows a scalable, object-oriented design to ensure reliability and
 * **Nornir**: Manages inventory, concurrency, and device connections.
 * **NAPALM**: Provides a unified driver layer to interact with various network operating systems using getters.
 * **Netmiko**: Provides a way to send raw CLI commands to devices.
+* **Paramiko**: Provides SSH command execution and SFTP file operations for Linux server management.
 
 ## Installation
 
@@ -74,7 +75,7 @@ The server exposes a set of simple, direct tools to the LLM:
 
 ### Device Interaction Tools
 
-The server provides dedicated tools for NAPALM getters and Netmiko commands.
+The server provides dedicated tools for NAPALM getters, Netmiko commands, and Paramiko-based Linux server management.
 
 * **`run_napalm_getter(getter: str, host_name: str | None = None, group_name: str | None = None)`**
   Executes a specific NAPALM getter on a target device to retrieve structured data.
@@ -91,6 +92,68 @@ The server provides dedicated tools for NAPALM getters and Netmiko commands.
   * `command`: The exact CLI command to execute (e.g., `"show version"`, `"show ip route"`).
   * `host_name`: (Optional) The specific device to target.
   * `group_name`: (Optional) The specific group to target.
+
+* **`run_paramiko_command(command: str, host_name: str | None = None, group_name: str | None = None, timeout: int = 30)`**
+  Executes an SSH command on target Linux servers using Paramiko.
+
+  **Arguments:**
+  * `command`: The SSH command to execute (e.g., `"ls -la"`, `"df -h"`, `"systemctl status nginx"`).
+  * `host_name`: (Optional) The specific server to target. If omitted, runs against all servers.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
+  * `timeout`: Command execution timeout in seconds (default: 30).
+
+* **`paramiko_sftp_upload(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**
+  Uploads a file to target Linux servers via SFTP using Paramiko.
+
+  **Arguments:**
+  * `local_path`: Path to the local file to upload.
+  * `remote_path`: Destination path on the remote servers.
+  * `host_name`: (Optional) The specific server to target. If omitted, runs against all servers.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
+
+* **`paramiko_sftp_download(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**
+  Downloads a file from target Linux servers via SFTP using Paramiko.
+
+  **Arguments:**
+  * `remote_path`: Path to the remote file to download.
+  * `local_path`: Destination path for the downloaded file (directory for multiple servers).
+  * `host_name`: (Optional) The specific server to target. If omitted, runs against all servers.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
+
+* **`paramiko_sftp_list(remote_path: str = ".", host_name: str | None = None, group_name: str | None = None)`**
+  Lists files and directories in a remote path on target Linux servers via SFTP using Paramiko.
+
+  **Arguments:**
+  * `remote_path`: Remote directory path to list (default: current directory).
+  * `host_name`: (Optional) The specific server to target. If omitted, runs against all servers.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
+
+* **`paramiko_scp_upload(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**
+  Uploads a file to target Linux servers via SCP using Paramiko.
+
+  **Arguments:**
+  * `local_path`: Path to the local file to upload.
+  * `remote_path`: Destination path on the remote servers.
+  * `host_name`: (Optional) The specific server to target. If omitted, runs against all servers.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
+
+* **`paramiko_scp_download(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**
+  Downloads a file from target Linux servers via SCP using Paramiko.
+
+  **Arguments:**
+  * `remote_path`: Path to the remote file to download.
+  * `local_path`: Destination path for the downloaded file (directory for multiple servers).
+  * `host_name`: (Optional) The specific server to target. If omitted, runs against all servers.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
+
+* **`paramiko_scp_upload_recursive(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**
+  Uploads a directory to target Linux servers via SCP using Paramiko recursively.
+
+  **Arguments:**
+  * `local_path`: Path to the local directory to upload.
+  * `remote_path`: Destination path on the remote servers.
+  * `host_name`: (Optional) The specific server to target. If omitted, runs against all servers.
+  * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
 
 **Example Usage:**
 
@@ -109,6 +172,33 @@ run_netmiko_command(command="show running-config", group_name="core")
 
 # Get system information for a specific firewall
 run_netmiko_command(command="show system", host_name="firewall-01")
+
+# Execute a system command on a Linux server
+run_paramiko_command(command="df -h", host_name="web-server-01")
+
+# Check memory usage on all Linux servers in the 'app-servers' group
+run_paramiko_command(command="free -m", group_name="app-servers")
+
+# Upload a configuration file to a Linux server
+paramiko_sftp_upload(local_path="/home/user/nginx.conf", remote_path="/etc/nginx/nginx.conf", host_name="web-server-01")
+
+# Download a log file from a Linux server
+paramiko_sftp_download(remote_path="/var/log/app.log", local_path="/tmp/app.log", host_name="app-server-01")
+
+# List files in a directory on a Linux server
+paramiko_sftp_list(remote_path="/home/user", host_name="web-server-01")
+
+# List files in the root directory on all app servers
+paramiko_sftp_list(remote_path="/", group_name="app-servers")
+
+# Upload a file to a Linux server via SCP
+paramiko_scp_upload(local_path="/home/user/config.txt", remote_path="/tmp/config.txt", host_name="web-server-01")
+
+# Download a file from a Linux server via SCP
+paramiko_scp_download(remote_path="/etc/hosts", local_path="/backup/hosts_backup.txt", host_name="app-server-01")
+
+# Upload a directory recursively to multiple Linux servers via SCP
+paramiko_scp_upload_recursive(local_path="/home/user/scripts/", remote_path="/opt/scripts/", group_name="app-servers")
 ```
 
 ### Resources

@@ -41,6 +41,13 @@ The server exposes the following tools to LLMs:
 ### Device Interaction
 - **`run_napalm_getter(getter: str, host_name: str | None = None, group_name: str | None = None)`**: Runs a NAPALM getter (e.g., facts, interfaces) on target devices.
 - **`run_netmiko_command(command: str, host_name: str | None = None, group_name: str | None = None)`**: Runs a raw CLI command on target devices using Netmiko.
+- **`run_paramiko_command(command: str, host_name: str | None = None, group_name: str | None = None, timeout: int = 30)`**: Executes an SSH command on target Linux servers using Paramiko.
+- **`paramiko_sftp_upload(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a file to target Linux servers via SFTP using Paramiko.
+- **`paramiko_sftp_download(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**: Downloads a file from target Linux servers via SFTP using Paramiko.
+- **`paramiko_sftp_list(remote_path: str = ".", host_name: str | None = None, group_name: str | None = None)`**: Lists files and directories in a remote path on target Linux servers via SFTP using Paramiko.
+- **`paramiko_scp_upload(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a file to target Linux servers via SCP using Paramiko.
+- **`paramiko_scp_download(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**: Downloads a file from target Linux servers via SCP using Paramiko.
+- **`paramiko_scp_upload_recursive(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a directory to target Linux servers via SCP using Paramiko recursively.
 
 ## Resources
 
@@ -93,11 +100,11 @@ uv run pyright
 ## Key Patterns
 
 - **Singleton Pattern**: `NornirManager.instance()` ensures only one Nornir instance exists with thread-safe access.
-- **Runner Pattern**: Backend-specific logic is encapsulated in runner classes inheriting from `BaseRunner`.
+- **Runner Pattern**: Backend-specific logic is encapsulated in runner classes inheriting from `BaseRunner` (e.g., `NapalmRunner`, `NetmikoRunner`, `ParamikoRunner`).
 - **Result Pattern**: All operations return `Result` type (Success/Error) for explicit error handling.
 - **Constants Pattern**: All error types, backends, and configuration keys are defined as enums in `constants.py`.
 - **Explicit Type Hints**: All tool functions have explicit return type hints (e.g., `-> dict[str, Any]`) for better MCP schema generation.
-- **Read-Only by Default**: `run_napalm_getter` is read-only. `run_netmiko_command` can be used for configuration changes.
+- **Read-Only by Default**: `run_napalm_getter` is read-only. `run_netmiko_command` and `run_paramiko_command` can be used for configuration changes.
 
 ## Error Handling
 

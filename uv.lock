@@ -1123,6 +1123,7 @@ dependencies = [
     { name = "nornir-napalm" },
     { name = "nornir-netmiko" },
     { name = "nornir-paramiko" },
+    { name = "paramiko" },
 ]
 
 [package.dev-dependencies]
@@ -1139,6 +1140,7 @@ requires-dist = [
     { name = "nornir-napalm", specifier = ">=0.5.0" },
     { name = "nornir-netmiko", specifier = ">=1.0.1" },
     { name = "nornir-paramiko", specifier = ">=0.3.0" },
+    { name = "paramiko", specifier = ">=2.7,<3.0" },
 ]
 
 [package.metadata.requires-dev]

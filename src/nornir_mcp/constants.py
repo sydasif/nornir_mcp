@@ -31,6 +31,7 @@ class Backend(StrEnum):
 
     NAPALM = "napalm"
     NETMIKO = "netmiko"
+    PARAMIKO = "paramiko"
 
 
 class TargetType(StrEnum):

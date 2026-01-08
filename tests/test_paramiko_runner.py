@@ -4,12 +4,12 @@ This module contains unit tests for the ParamikoRunner class and its methods,
 verifying that error handling works correctly.
 """
 
-import pytest
 from unittest.mock import Mock
-import paramiko
 
-from nornir_mcp.runners.paramiko_runner import ParamikoRunner
+import pytest
+
 from nornir_mcp.constants import ErrorType
+from nornir_mcp.runners.paramiko_runner import ParamikoRunner
 from nornir_mcp.types import MCPException
 
 
@@ -57,15 +57,6 @@ class TestParamikoRunner:
         assert exc_info.value.error_type == ErrorType.INVALID_PARAMETERS
         assert "Local path parameter is required" in exc_info.value.message
 
-
-    def test_sftp_list_empty_path(self):
-        """Test SFTP list with empty path."""
-        with pytest.raises(MCPException) as exc_info:
-            self.runner.sftp_list("", host_name="test-host")
-
-        assert exc_info.value.error_type == ErrorType.INVALID_PARAMETERS
-        assert "Remote path parameter is required" in exc_info.value.message
-
     def test_scp_upload_empty_paths(self):
         """Test SCP upload with empty paths."""
         with pytest.raises(MCPException) as exc_info:
@@ -112,4 +103,5 @@ class TestParamikoRunner:
 def test_import():
     """Simple test to verify the module can be imported."""
     from nornir_mcp.runners.paramiko_runner import ParamikoRunner
+
     assert ParamikoRunner is not None

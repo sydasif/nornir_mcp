@@ -219,7 +219,7 @@ async def download_directory(
     """
     return await _run_tool(
         ParamikoRunner,
-        "scp_download",
+        "scp_download_recursive",
         host_name,
         group_name,
         {

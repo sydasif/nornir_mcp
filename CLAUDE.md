@@ -42,12 +42,10 @@ The server exposes the following tools to LLMs:
 - **`get_device_data(getter: str, host_name: str | None = None, group_name: str | None = None)`**: Runs a NAPALM getter (e.g., facts, interfaces) on target devices.
 - **`run_cli_commands(command: str, host_name: str | None = None, group_name: str | None = None)`**: Runs a raw CLI command on target devices using Netmiko.
 - **`run_shell_command(command: str, host_name: str | None = None, group_name: str | None = None, timeout: int = 30)`**: Executes an SSH command on target Linux servers using Paramiko.
-- **`paramiko_sftp_upload(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a file to target Linux servers via SFTP using Paramiko.
-- **`paramiko_sftp_download(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**: Downloads a file from target Linux servers via SFTP using Paramiko.
-- **`paramiko_sftp_list(remote_path: str = ".", host_name: str | None = None, group_name: str | None = None)`**: Lists files and directories in a remote path on target Linux servers via SFTP using Paramiko.
-- **`paramiko_scp_upload(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a file to target Linux servers via SCP using Paramiko.
-- **`paramiko_scp_download(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**: Downloads a file from target Linux servers via SCP using Paramiko.
-- **`paramiko_scp_upload_recursive(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a directory to target Linux servers via SCP using Paramiko recursively.
+- **`upload_file(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a file to target Linux servers via SFTP using Paramiko.
+- **`download_file(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**: Downloads a file from target Linux servers via SFTP using Paramiko.
+- **`upload_directory(local_path: str, remote_path: str, host_name: str | None = None, group_name: str | None = None)`**: Uploads a directory to target Linux servers via SCP using Paramiko recursively.
+- **`download_directory(remote_path: str, local_path: str, host_name: str | None = None, group_name: str | None = None)`**: Downloads a directory from target Linux servers via SCP using Paramiko recursively.
 
 ## Resources
 

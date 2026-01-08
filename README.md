@@ -77,7 +77,7 @@ The server exposes a set of simple, direct tools to the LLM:
 
 The server provides dedicated tools for NAPALM getters, Netmiko commands, and Paramiko-based Linux server management.
 
-* **`run_napalm_getter(getter: str, host_name: str | None = None, group_name: str | None = None)`**
+* **`get_device_data(getter: str, host_name: str | None = None, group_name: str | None = None)`**
   Executes a specific NAPALM getter on a target device to retrieve structured data.
 
   **Arguments:**
@@ -85,7 +85,7 @@ The server provides dedicated tools for NAPALM getters, Netmiko commands, and Pa
   * `host_name`: (Optional) The specific device to target. If omitted, runs against all devices.
   * `group_name`: (Optional) The specific group to target. Cannot be used with `host_name`.
 
-* **`run_netmiko_command(command: str, host_name: str | None = None, group_name: str | None = None)`**
+* **`run_cli_commands(command: str, host_name: str | None = None, group_name: str | None = None)`**
   Executes a raw CLI command on a target device using Netmiko.
 
   **Arguments:**
@@ -93,7 +93,7 @@ The server provides dedicated tools for NAPALM getters, Netmiko commands, and Pa
   * `host_name`: (Optional) The specific device to target.
   * `group_name`: (Optional) The specific group to target.
 
-* **`run_paramiko_command(command: str, host_name: str | None = None, group_name: str | None = None, timeout: int = 30)`**
+* **`run_shell_command(command: str, host_name: str | None = None, group_name: str | None = None, timeout: int = 30)`**
   Executes an SSH command on target Linux servers using Paramiko.
 
   **Arguments:**
@@ -159,25 +159,25 @@ The server provides dedicated tools for NAPALM getters, Netmiko commands, and Pa
 
 ```python
 # Get basic facts for all devices using NAPALM
-run_napalm_getter(getter="facts")
+get_device_data(getter="facts")
 
 # Get interfaces for a specific switch using NAPALM
-run_napalm_getter(getter="interfaces", host_name="switch-01")
+get_device_data(getter="interfaces", host_name="switch-01")
 
 # Get the routing table from a specific router using Netmiko
-run_netmiko_command(command="show ip route", host_name="router-01")
+run_cli_commands(command="show ip route", host_name="router-01")
 
 # Get the running configuration for all devices in the 'core' group
-run_netmiko_command(command="show running-config", group_name="core")
+run_cli_commands(command="show running-config", group_name="core")
 
 # Get system information for a specific firewall
-run_netmiko_command(command="show system", host_name="firewall-01")
+run_cli_commands(command="show system", host_name="firewall-01")
 
 # Execute a system command on a Linux server
-run_paramiko_command(command="df -h", host_name="web-server-01")
+run_shell_command(command="df -h", host_name="web-server-01")
 
 # Check memory usage on all Linux servers in the 'app-servers' group
-run_paramiko_command(command="free -m", group_name="app-servers")
+run_shell_command(command="free -m", group_name="app-servers")
 
 # Upload a configuration file to a Linux server
 paramiko_sftp_upload(local_path="/home/user/nginx.conf", remote_path="/etc/nginx/nginx.conf", host_name="web-server-01")
@@ -206,14 +206,14 @@ paramiko_scp_upload_recursive(local_path="/home/user/scripts/", remote_path="/op
 The server exposes dynamic resources to help discover capabilities:
 
 * **`nornir://napalm_getters`**
-  Returns a list of all valid getter names supported by the NAPALM runner. This is useful for knowing what can be passed to the `run_napalm_getter` tool.
+  Returns a list of all valid getter names supported by the NAPALM runner. This is useful for knowing what can be passed to the `get_device_data` tool.
 
 * **`nornir://netmiko_commands`**
-  Returns a list of common Netmiko CLI commands and their descriptions. This is useful for knowing what commands can be passed to the `run_netmiko_command` tool.
+  Returns a list of common Netmiko CLI commands and their descriptions. This is useful for knowing what commands can be passed to the `run_cli_commands` tool.
 
 ## Security & Testing
 
-* **Read-Only by Default**: The `run_napalm_getter` tool is read-only. `run_netmiko_command` can execute configuration commands, so use it with caution.
+* **Read-Only by Default**: The `get_device_data` tool is read-only. `run_cli_commands` can execute configuration commands, so use it with caution.
 * **Credentials**: Ensure your Nornir inventory files (`defaults.yaml` or `groups.yaml`) are secured with appropriate file permissions.
 * **Lab Environment**: To test safely, you can deploy the container lab provided in the [nornir-mcp-lab](https://github.com/sydasif/nornir-mcp-lab.git) repository.
 

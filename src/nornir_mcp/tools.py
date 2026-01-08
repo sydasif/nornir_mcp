@@ -64,7 +64,7 @@ async def _run_tool(
         return error_response(ErrorType.EXECUTION_ERROR, str(e))
 
 
-async def run_napalm_getter(
+async def get_device_data(
     getter: str,
     host_name: str | None = None,
     group_name: str | None = None,
@@ -75,12 +75,12 @@ async def run_napalm_getter(
         "run_getter",
         host_name,
         group_name,
-        {"backend": Backend.NAPALM, "getter": getter},
+        {"backend": Backend.NAPALM, "data_type": getter},
         getter,
     )
 
 
-async def run_netmiko_command(
+async def run_cli_commands(
     command: str,
     host_name: str | None = None,
     group_name: str | None = None,
@@ -91,12 +91,12 @@ async def run_netmiko_command(
         "run_command",
         host_name,
         group_name,
-        {"backend": Backend.NETMIKO, "command": command},
+        {"backend": Backend.NETMIKO, "commands": command},
         command,
     )
 
 
-async def run_paramiko_command(
+async def run_shell_command(
     command: str,
     host_name: str | None = None,
     group_name: str | None = None,
@@ -116,7 +116,7 @@ async def run_paramiko_command(
         "run_ssh_command",
         host_name,
         group_name,
-        {"backend": Backend.PARAMIKO, "command": command},
+        {"backend": Backend.PARAMIKO, "shell_command": command},
         command,
         timeout=timeout,
     )

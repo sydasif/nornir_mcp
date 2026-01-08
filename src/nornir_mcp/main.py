@@ -1,4 +1,4 @@
-"""Main entry point for the Nornir Model Context Protocol (MCP) server.
+"""Main entry point for the Nornir MCP server.
 
 This module initializes and runs the MCP server, registering all available
 tools for network automation tasks.
@@ -10,11 +10,11 @@ from nornir_mcp.resources import get_getters, get_netmiko_commands
 from nornir_mcp.tools import (
     download_directory,
     download_file,
+    get_device_data,
     list_nornir_inventory,
     reload_nornir_inventory,
-    run_napalm_getter,
-    run_netmiko_command,
-    run_paramiko_command,
+    run_cli_commands,
+    run_shell_command,
     upload_directory,
     upload_file,
 )
@@ -29,11 +29,11 @@ def main():
     mcp.tool(reload_nornir_inventory)
 
     # Device Interaction
-    mcp.tool(run_napalm_getter)
-    mcp.tool(run_netmiko_command)
+    mcp.tool(get_device_data)
+    mcp.tool(run_cli_commands)
 
     # Linux/Paramiko Interaction
-    mcp.tool(run_paramiko_command)
+    mcp.tool(run_shell_command)
     mcp.tool(upload_file)
     mcp.tool(upload_directory)
     mcp.tool(download_file)

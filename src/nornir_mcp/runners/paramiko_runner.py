@@ -1,20 +1,14 @@
 """Paramiko runner module for Nornir MCP.
 
 This module defines the ParamikoRunner class, which handles execution
-of SSH commands and file operations using the Paramiko library for Linux server management.
+of SSH commands and file operations using nornir-paramiko for Linux server management.
 """
 
 import os
 from pathlib import Path
 from typing import Any
 
-import paramiko
-
-# Import the scp module for secure file transfers
-try:
-    import scp
-except ImportError:
-    scp = None
+from nornir_paramiko.plugins.tasks import paramiko_command, paramiko_sftp
 
 from ..constants import ErrorType
 from .base_runner import BaseRunner
@@ -24,7 +18,7 @@ class ParamikoRunner(BaseRunner):
     """Runner for Paramiko automation backend.
 
     Handles execution of SSH commands and SFTP file operations against Linux servers
-    using the Paramiko library.
+    using the nornir-paramiko plugin (which internally uses Paramiko but through Nornir's task system).
     """
 
     def run_ssh_command(
@@ -52,72 +46,43 @@ class ParamikoRunner(BaseRunner):
         if not command:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Command parameter is required")
 
+        def ssh_command_task(task):
+            """Execute SSH command on a single host using nornir-paramiko."""
+            try:
+                # Execute the command using nornir-paramiko's paramiko_command task
+                result = task.run(
+                    task=paramiko_command,
+                    command=command,
+                    timeout=timeout
+                )
+
+                # Extract results from the nornir result object
+                stdout_data = result.result.stdout if hasattr(result.result, 'stdout') else str(result.result)
+                stderr_data = result.result.stderr if hasattr(result.result, 'stderr') else ""
+                exit_status = result.result.exit_code if hasattr(result.result, 'exit_code') else 0
+
+                # For cases where the result is just a string, try to parse it
+                if isinstance(result.result, str):
+                    stdout_data = result.result
+                    stderr_data = ""
+                    exit_status = 0
+
+                # Return the results
+                return {
+                    "command": command,
+                    "stdout": stdout_data,
+                    "stderr": stderr_data,
+                    "exit_status": exit_status,
+                    "success": exit_status == 0,
+                }
+            except Exception as e:
+                return {
+                    "error": ErrorType.EXECUTION_ERROR,
+                    "message": f"Command execution failed: {str(e)}",
+                    "success": False,
+                }
+
         try:
-            # Create a custom task for SSH command execution
-            def ssh_command_task(task):
-                """Execute SSH command on a single host."""
-                host = task.host
-                hostname = host.hostname or host.name
-
-                # Get SSH connection parameters from host data
-                username = host.username
-                password = host.password
-                port = host.port or 22
-
-                # Create SSH client
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507  # noqa: S507
-
-                try:
-                    # Connect to the host
-                    ssh_client.connect(
-                        hostname=hostname,
-                        port=port,
-                        username=username,
-                        password=password,
-                        timeout=timeout,
-                        look_for_keys=True,  # Allow key-based auth
-                        allow_agent=True,  # Allow SSH agent
-                    )
-
-                    # Execute the command
-                    stdin, stdout, stderr = ssh_client.exec_command(command, timeout=timeout)
-
-                    # Get the results
-                    stdout_data = stdout.read().decode("utf-8")
-                    stderr_data = stderr.read().decode("utf-8")
-                    exit_status = stdout.channel.recv_exit_status()
-
-                    # Return the results
-                    return {
-                        "command": command,
-                        "stdout": stdout_data,
-                        "stderr": stderr_data,
-                        "exit_status": exit_status,
-                        "success": exit_status == 0,
-                    }
-
-                except paramiko.AuthenticationException as e:
-                    return {
-                        "error": ErrorType.EXECUTION_ERROR,
-                        "message": f"Authentication failed: {str(e)}",
-                        "success": False,
-                    }
-                except paramiko.SSHException as e:
-                    return {
-                        "error": ErrorType.EXECUTION_ERROR,
-                        "message": f"SSH error: {str(e)}",
-                        "success": False,
-                    }
-                except Exception as e:
-                    return {
-                        "error": ErrorType.EXECUTION_ERROR,
-                        "message": f"Command execution failed: {str(e)}",
-                        "success": False,
-                    }
-                finally:
-                    ssh_client.close()
-
             # Use the parent class method to run the task on hosts
             aggregated_result = self.run_on_hosts(
                 task=ssh_command_task, host_name=host_name, group_name=group_name
@@ -164,65 +129,22 @@ class ParamikoRunner(BaseRunner):
             self.raise_error(ErrorType.INVALID_PARAMETERS, f"Local file does not exist: {local_path}")
 
         def sftp_upload_task(task):
-            """Upload a file to a single host via SFTP."""
-            host = task.host
-            hostname = host.hostname or host.name
-
-            # Get SSH connection parameters from host data
-            username = host.username
-            password = host.password
-            port = host.port or 22
-
-            # Create SSH client
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
-
+            """Upload a file to a single host via SFTP using nornir-paramiko."""
             try:
-                # Connect to the host
-                ssh_client.connect(
-                    hostname=hostname,
-                    port=port,
-                    username=username,
-                    password=password,
-                    timeout=30,
-                    look_for_keys=True,
-                    allow_agent=True,
+                # Use nornir-paramiko's sftp task to upload the file
+                result = task.run(
+                    task=paramiko_sftp,
+                    operation='put',
+                    src=local_path,
+                    dst=remote_path
                 )
-
-                # Create SFTP client
-                sftp_client = ssh_client.open_sftp()
-
-                # Upload the file
-                sftp_client.put(local_path, remote_path)
-
-                # Close SFTP client
-                sftp_client.close()
 
                 # Return success result
                 return {
                     "local_path": local_path,
                     "remote_path": remote_path,
                     "success": True,
-                    "message": f"File uploaded successfully to {hostname}",
-                }
-
-            except FileNotFoundError as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Local file not found: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.AuthenticationException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Authentication failed: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.SSHException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SSH error: {str(e)}",
-                    "success": False,
+                    "message": f"File uploaded successfully to {task.host.name}",
                 }
             except Exception as e:
                 return {
@@ -230,8 +152,6 @@ class ParamikoRunner(BaseRunner):
                     "message": f"File upload failed: {str(e)}",
                     "success": False,
                 }
-            finally:
-                ssh_client.close()
 
         try:
             # Use the parent class method to run the task on hosts
@@ -276,72 +196,29 @@ class ParamikoRunner(BaseRunner):
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
 
         def sftp_download_task(task):
-            """Download a file from a single host via SFTP."""
-            host = task.host
-            hostname = host.hostname or host.name
-
-            # Get SSH connection parameters from host data
-            username = host.username
-            password = host.password
-            port = host.port or 22
-
-            # Create SSH client
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
-
+            """Download a file from a single host via SFTP using nornir-paramiko."""
             try:
-                # Connect to the host
-                ssh_client.connect(
-                    hostname=hostname,
-                    port=port,
-                    username=username,
-                    password=password,
-                    timeout=30,
-                    look_for_keys=True,
-                    allow_agent=True,
-                )
-
-                # Create SFTP client
-                sftp_client = ssh_client.open_sftp()
-
                 # Create a unique local path for each host to avoid conflicts
                 local_file_path = local_path
                 if len(task.nornir.inventory.hosts) > 1:
                     # If multiple hosts, append hostname to avoid conflicts
                     path_obj = Path(local_path)
-                    local_file_path = str(path_obj.parent / f"{hostname}_{path_obj.name}")
+                    local_file_path = str(path_obj.parent / f"{task.host.name}_{path_obj.name}")
 
-                # Download the file
-                sftp_client.get(remote_path, local_file_path)
-
-                # Close SFTP client
-                sftp_client.close()
+                # Use nornir-paramiko's sftp task to download the file
+                result = task.run(
+                    task=paramiko_sftp,
+                    operation='get',
+                    src=remote_path,
+                    dst=local_file_path
+                )
 
                 # Return success result
                 return {
                     "remote_path": remote_path,
                     "local_path": local_file_path,
                     "success": True,
-                    "message": f"File downloaded successfully from {hostname} to {local_file_path}",
-                }
-
-            except FileNotFoundError as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Remote file not found: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.AuthenticationException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Authentication failed: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.SSHException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SSH error: {str(e)}",
-                    "success": False,
+                    "message": f"File downloaded successfully from {task.host.name} to {local_file_path}",
                 }
             except Exception as e:
                 return {
@@ -349,8 +226,6 @@ class ParamikoRunner(BaseRunner):
                     "message": f"File download failed: {str(e)}",
                     "success": False,
                 }
-            finally:
-                ssh_client.close()
 
         try:
             # Use the parent class method to run the task on hosts
@@ -374,7 +249,7 @@ class ParamikoRunner(BaseRunner):
         host_name: str | None = None,
         group_name: str | None = None,
     ) -> dict[str, Any]:  # noqa: C901
-        """Upload a file to target hosts via SCP.
+        """Upload a file to target hosts via SFTP (using paramiko_sftp as replacement for SCP).
 
         Args:
             local_path: Path to the local file to upload
@@ -389,11 +264,6 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if scp is None:
-            self.raise_error(
-                ErrorType.EXECUTION_ERROR, "SCP library not available. Please install the 'scp' package."
-            )
-
         if not local_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
         if not remote_path:
@@ -404,72 +274,22 @@ class ParamikoRunner(BaseRunner):
             self.raise_error(ErrorType.INVALID_PARAMETERS, f"Local file does not exist: {local_path}")
 
         def scp_upload_task(task):
-            """Upload a file to a single host via SCP."""
-            host = task.host
-            hostname = host.hostname or host.name
-
-            # Get SSH connection parameters from host data
-            username = host.username
-            password = host.password
-            port = host.port or 22
-
-            # Create SSH client
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
-
+            """Upload a file to a single host via SFTP using nornir-paramiko."""
             try:
-                # Connect to the host
-                ssh_client.connect(
-                    hostname=hostname,
-                    port=port,
-                    username=username,
-                    password=password,
-                    timeout=30,
-                    look_for_keys=True,
-                    allow_agent=True,
+                # Use nornir-paramiko's sftp task to upload the file (replacing SCP)
+                result = task.run(
+                    task=paramiko_sftp,
+                    operation='put',
+                    src=local_path,
+                    dst=remote_path
                 )
 
-                # Create SCP client using the SSH transport
-                scp_client = scp.SCPClient(ssh_client.get_transport())
-
-                try:
-                    # Upload the file
-                    scp_client.put(local_path, remote_path)
-
-                    # Return success result
-                    return {
-                        "local_path": local_path,
-                        "remote_path": remote_path,
-                        "success": True,
-                        "message": f"File uploaded successfully to {hostname}",
-                    }
-                finally:
-                    # Close the SCP client
-                    scp_client.close()
-
-            except FileNotFoundError as e:
+                # Return success result
                 return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Local file not found: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.AuthenticationException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Authentication failed: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.SSHException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SSH error: {str(e)}",
-                    "success": False,
-                }
-            except scp.SCPException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SCP error: {str(e)}",
-                    "success": False,
+                    "local_path": local_path,
+                    "remote_path": remote_path,
+                    "success": True,
+                    "message": f"File uploaded successfully to {task.host.name}",
                 }
             except Exception as e:
                 return {
@@ -477,8 +297,6 @@ class ParamikoRunner(BaseRunner):
                     "message": f"File upload failed: {str(e)}",
                     "success": False,
                 }
-            finally:
-                ssh_client.close()
 
         try:
             # Use the parent class method to run the task on hosts
@@ -502,7 +320,7 @@ class ParamikoRunner(BaseRunner):
         host_name: str | None = None,
         group_name: str | None = None,
     ) -> dict[str, Any]:  # noqa: C901
-        """Download a file from target hosts via SCP.
+        """Download a file from target hosts via SFTP (using paramiko_sftp as replacement for SCP).
 
         Args:
             remote_path: Path to the remote file to download
@@ -517,90 +335,35 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if scp is None:
-            self.raise_error(
-                ErrorType.EXECUTION_ERROR, "SCP library not available. Please install the 'scp' package."
-            )
-
         if not remote_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
         if not local_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
 
         def scp_download_task(task):
-            """Download a file from a single host via SCP."""
-            host = task.host
-            hostname = host.hostname or host.name
-
-            # Get SSH connection parameters from host data
-            username = host.username
-            password = host.password
-            port = host.port or 22
-
-            # Create SSH client
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
-
+            """Download a file from a single host via SFTP using nornir-paramiko."""
             try:
-                # Connect to the host
-                ssh_client.connect(
-                    hostname=hostname,
-                    port=port,
-                    username=username,
-                    password=password,
-                    timeout=30,
-                    look_for_keys=True,
-                    allow_agent=True,
+                # Create a unique local path for each host to avoid conflicts
+                local_file_path = local_path
+                if len(task.nornir.inventory.hosts) > 1:
+                    # If multiple hosts, append hostname to avoid conflicts
+                    path_obj = Path(local_path)
+                    local_file_path = str(path_obj.parent / f"{task.host.name}_{path_obj.name}")
+
+                # Use nornir-paramiko's sftp task to download the file (replacing SCP)
+                result = task.run(
+                    task=paramiko_sftp,
+                    operation='get',
+                    src=remote_path,
+                    dst=local_file_path
                 )
 
-                # Create SCP client using the SSH transport
-                scp_client = scp.SCPClient(ssh_client.get_transport())
-
-                try:
-                    # Create a unique local path for each host to avoid conflicts
-                    local_file_path = local_path
-                    if len(task.nornir.inventory.hosts) > 1:
-                        # If multiple hosts, append hostname to avoid conflicts
-                        path_obj = Path(local_path)
-                        local_file_path = str(path_obj.parent / f"{hostname}_{path_obj.name}")
-
-                    # Download the file
-                    scp_client.get(remote_path, local_file_path)
-
-                    # Return success result
-                    return {
-                        "remote_path": remote_path,
-                        "local_path": local_file_path,
-                        "success": True,
-                        "message": f"File downloaded successfully from {hostname} to {local_file_path}",
-                    }
-                finally:
-                    # Close the SCP client
-                    scp_client.close()
-
-            except FileNotFoundError as e:
+                # Return success result
                 return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Remote file not found: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.AuthenticationException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Authentication failed: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.SSHException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SSH error: {str(e)}",
-                    "success": False,
-                }
-            except scp.SCPException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SCP error: {str(e)}",
-                    "success": False,
+                    "remote_path": remote_path,
+                    "local_path": local_file_path,
+                    "success": True,
+                    "message": f"File downloaded successfully from {task.host.name} to {local_file_path}",
                 }
             except Exception as e:
                 return {
@@ -608,8 +371,6 @@ class ParamikoRunner(BaseRunner):
                     "message": f"File download failed: {str(e)}",
                     "success": False,
                 }
-            finally:
-                ssh_client.close()
 
         try:
             # Use the parent class method to run the task on hosts
@@ -633,7 +394,7 @@ class ParamikoRunner(BaseRunner):
         host_name: str | None = None,
         group_name: str | None = None,
     ) -> dict[str, Any]:  # noqa: C901
-        """Upload a directory to target hosts via SCP recursively.
+        """Upload a directory to target hosts via SFTP recursively (using paramiko_sftp as replacement for SCP).
 
         Args:
             local_path: Path to the local directory to upload
@@ -648,11 +409,6 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if scp is None:
-            self.raise_error(
-                ErrorType.EXECUTION_ERROR, "SCP library not available. Please install the 'scp' package."
-            )
-
         if not local_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
         if not remote_path:
@@ -663,81 +419,53 @@ class ParamikoRunner(BaseRunner):
             self.raise_error(ErrorType.INVALID_PARAMETERS, f"Local directory does not exist: {local_path}")
 
         def scp_upload_recursive_task(task):
-            """Upload a directory to a single host via SCP recursively."""
-            host = task.host
-            hostname = host.hostname or host.name
-
-            # Get SSH connection parameters from host data
-            username = host.username
-            password = host.password
-            port = host.port or 22
-
-            # Create SSH client
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
+            """Upload a directory to a single host via SSH command (replacing recursive SCP)."""
+            import tempfile
+            import tarfile
+            import os
 
             try:
-                # Connect to the host
-                ssh_client.connect(
-                    hostname=hostname,
-                    port=port,
-                    username=username,
-                    password=password,
-                    timeout=30,
-                    look_for_keys=True,
-                    allow_agent=True,
-                )
+                # Create a temporary tar file of the directory
+                with tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False) as tmp_file:
+                    temp_path = tmp_file.name
 
-                # Create SCP client using the SSH transport
-                scp_client = scp.SCPClient(ssh_client.get_transport())
+                # Create a tar.gz archive of the local directory
+                with tarfile.open(temp_path, "w:gz") as tar:
+                    tar.add(local_path, arcname=os.path.basename(local_path))
 
                 try:
-                    # Upload the directory recursively
-                    scp_client.put(local_path, remote_path, recursive=True)
+                    # Upload the archive using paramiko_sftp
+                    result = task.run(
+                        task=paramiko_sftp,
+                        operation='put',
+                        src=temp_path,
+                        dst=f"/tmp/{os.path.basename(temp_path)}"
+                    )
 
-                    # Return success result
+                    # Extract the archive on the remote host using an SSH command
+                    extract_cmd = f"mkdir -p {remote_path} && cd {remote_path} && tar -xzf /tmp/{os.path.basename(temp_path)} && rm /tmp/{os.path.basename(temp_path)}"
+
+                    # Execute the extraction command
+                    cmd_result = task.run(
+                        task=paramiko_command,
+                        command=extract_cmd
+                    )
+
                     return {
                         "local_path": local_path,
                         "remote_path": remote_path,
                         "success": True,
-                        "message": f"Directory uploaded successfully to {hostname}",
+                        "message": f"Directory uploaded successfully to {task.host.name}",
                     }
                 finally:
-                    # Close the SCP client
-                    scp_client.close()
-
-            except FileNotFoundError as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Local directory not found: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.AuthenticationException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Authentication failed: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.SSHException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SSH error: {str(e)}",
-                    "success": False,
-                }
-            except scp.SCPException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SCP error: {str(e)}",
-                    "success": False,
-                }
+                    # Clean up the temporary file
+                    os.unlink(temp_path)
             except Exception as e:
                 return {
                     "error": ErrorType.EXECUTION_ERROR,
                     "message": f"Directory upload failed: {str(e)}",
                     "success": False,
                 }
-            finally:
-                ssh_client.close()
 
         try:
             # Use the parent class method to run the task on hosts
@@ -761,7 +489,7 @@ class ParamikoRunner(BaseRunner):
         host_name: str | None = None,
         group_name: str | None = None,
     ) -> dict[str, Any]:  # noqa: C901
-        """Download a directory from target hosts via SCP recursively.
+        """Download a directory from target hosts via SFTP recursively (using paramiko_sftp as replacement for SCP).
 
         Args:
             remote_path: Path to the remote directory to download
@@ -776,99 +504,84 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if scp is None:
-            self.raise_error(
-                ErrorType.EXECUTION_ERROR, "SCP library not available. Please install the 'scp' package."
-            )
-
         if not remote_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
         if not local_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
 
         def scp_download_recursive_task(task):
-            """Download a directory from a single host via SCP recursively."""
-            host = task.host
-            hostname = host.hostname or host.name
-
-            # Get SSH connection parameters from host data
-            username = host.username
-            password = host.password
-            port = host.port or 22
-
-            # Create SSH client
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())  # noqa: S507
+            """Download a directory from a single host via SSH command (replacing recursive SCP)."""
+            import tempfile
+            import tarfile
+            import os
 
             try:
-                # Connect to the host
-                ssh_client.connect(
-                    hostname=hostname,
-                    port=port,
-                    username=username,
-                    password=password,
-                    timeout=30,
-                    look_for_keys=True,
-                    allow_agent=True,
+                # Create a temporary tar file to store the archive
+                with tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False) as tmp_file:
+                    temp_path = tmp_file.name
+
+                # Create a tar.gz archive of the remote directory using SSH command
+                archive_name = f"temp_archive_{task.host.name}.tar.gz"
+
+                # Archive the remote directory
+                archive_cmd = f"cd /tmp && tar -czf {archive_name} -C {os.path.dirname(remote_path)} {os.path.basename(remote_path)}"
+
+                # Execute the archiving command
+                archive_result = task.run(
+                    task=paramiko_command,
+                    command=archive_cmd
                 )
 
-                # Create SCP client using the SSH transport
-                scp_client = scp.SCPClient(ssh_client.get_transport())
+                # Download the archive using paramiko_sftp
+                result = task.run(
+                    task=paramiko_sftp,
+                    operation='get',
+                    src=f"/tmp/{archive_name}",
+                    dst=temp_path
+                )
 
-                try:
-                    # Create a unique local path for each host to avoid conflicts
-                    local_dir_path = local_path
-                    if len(task.nornir.inventory.hosts) > 1:
-                        # If multiple hosts, append hostname to avoid conflicts
-                        path_obj = Path(local_path)
-                        local_dir_path = str(path_obj.parent / f"{hostname}_{path_obj.name}")
+                # Create the local destination directory
+                local_dir_path = local_path
+                if len(task.nornir.inventory.hosts) > 1:
+                    # If multiple hosts, append hostname to avoid conflicts
+                    path_obj = Path(local_path)
+                    local_dir_path = str(path_obj.parent / f"{task.host.name}_{path_obj.name}")
 
-                    # Download the directory recursively
-                    scp_client.get(remote_path, local_dir_path, recursive=True)
+                os.makedirs(local_dir_path, exist_ok=True)
 
-                    # Return success result
-                    return {
-                        "remote_path": remote_path,
-                        "local_path": local_dir_path,
-                        "success": True,
-                        "message": f"Directory downloaded successfully from {hostname} to {local_dir_path}",
-                    }
-                finally:
-                    # Close the SCP client
-                    scp_client.close()
+                # Extract the archive locally
+                with tarfile.open(temp_path, "r:gz") as tar:
+                    tar.extractall(path=local_dir_path)
 
-            except FileNotFoundError as e:
+                # Remove the remote archive
+                cleanup_cmd = f"rm /tmp/{archive_name}"
+                cleanup_result = task.run(
+                    task=paramiko_command,
+                    command=cleanup_cmd
+                )
+
+                # Clean up the temporary file
+                os.unlink(temp_path)
+
                 return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Remote directory not found: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.AuthenticationException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"Authentication failed: {str(e)}",
-                    "success": False,
-                }
-            except paramiko.SSHException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SSH error: {str(e)}",
-                    "success": False,
-                }
-            except scp.SCPException as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"SCP error: {str(e)}",
-                    "success": False,
+                    "remote_path": remote_path,
+                    "local_path": local_dir_path,
+                    "success": True,
+                    "message": f"Directory downloaded successfully from {task.host.name} to {local_dir_path}",
                 }
             except Exception as e:
+                # Attempt to clean up temp files in case of error
+                try:
+                    import os
+                    os.unlink(temp_path)
+                except:
+                    pass
+
                 return {
                     "error": ErrorType.EXECUTION_ERROR,
                     "message": f"Directory download failed: {str(e)}",
                     "success": False,
                 }
-            finally:
-                ssh_client.close()
 
         try:
             # Use the parent class method to run the task on hosts

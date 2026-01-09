@@ -61,12 +61,17 @@ def extract_single_key(data: Any, key: str) -> Any:
     Utility function to safely extract a specific key from nested data structures.
 
     Args:
-        data: Dictionary to extract from
-        key: Key to extract
+        data: Dictionary or other data structure to extract from
+        key: Key to extract from the data structure
 
     Returns:
-        Value of the key if it exists, otherwise returns the original data
+        Value of the key if it exists in the dictionary, otherwise returns the original data
 
+    Example:
+        >>> extract_single_key({"a": 1, "b": 2}, "a")
+        1
+        >>> extract_single_key([1, 2, 3], "a")
+        [1, 2, 3]
     """
     if isinstance(data, dict) and key in data:
         return data[key]

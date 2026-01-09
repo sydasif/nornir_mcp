@@ -17,8 +17,6 @@ from nornir_mcp.types import MCPException
 class TestRunner(BaseRunner):
     """Concrete implementation of BaseRunner for testing purposes."""
 
-    pass
-
 
 def test_base_runner_instantiation():
     """Test that BaseRunner can be instantiated directly now that it's not abstract."""

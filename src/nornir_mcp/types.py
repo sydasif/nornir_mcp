@@ -18,8 +18,8 @@ class MCPException(Exception):
         """Initialize the MCP exception.
 
         Args:
-            error_type: The type of error as a string
-            message: Human-readable error message
+            error_type: The type of error as a string (typically from ErrorType enum)
+            message: Human-readable error message providing details about the error
 
         """
         self.error_type = error_type

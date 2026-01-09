@@ -8,7 +8,8 @@ from typing import Any
 
 from nornir_netmiko.tasks import netmiko_send_command
 
-from ..constants import ErrorType
+from nornir_mcp.constants import ErrorType
+
 from .base_runner import BaseRunner
 
 

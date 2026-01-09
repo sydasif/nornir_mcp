@@ -153,11 +153,10 @@ def get_getters() -> dict[str, Any]:
         # Return only the getters section
         if ConfigKey.GETTERS in capabilities:
             return {"getters": capabilities[ConfigKey.GETTERS]}
-        else:
-            return error_response(
-                ErrorType.GETTERS_NOT_FOUND,
-                f"{ConfigKey.GETTERS} section not found in {DefaultValue.CAPABILITIES_FILENAME}",
-            )
+        return error_response(
+            ErrorType.GETTERS_NOT_FOUND,
+            f"{ConfigKey.GETTERS} section not found in {DefaultValue.CAPABILITIES_FILENAME}",
+        )
     except Exception as e:
         return error_response(ErrorType.GETTERS_RETRIEVAL_FAILED, str(e))
 
@@ -190,11 +189,10 @@ def get_netmiko_commands() -> dict[str, Any]:
         # Return only the netmiko_commands section
         if ConfigKey.NETMIKO_COMMANDS in capabilities:
             return {"commands": capabilities[ConfigKey.NETMIKO_COMMANDS]}
-        else:
-            return error_response(
-                ErrorType.NETMIKO_COMMANDS_NOT_FOUND,
-                f"{ConfigKey.NETMIKO_COMMANDS} section not found in {DefaultValue.CAPABILITIES_FILENAME}",
-            )
+        return error_response(
+            ErrorType.NETMIKO_COMMANDS_NOT_FOUND,
+            f"{ConfigKey.NETMIKO_COMMANDS} section not found in {DefaultValue.CAPABILITIES_FILENAME}",
+        )
 
     except Exception as e:
         return error_response(ErrorType.NETMIKO_COMMANDS_RETRIEVAL_FAILED, str(e))

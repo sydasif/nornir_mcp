@@ -11,8 +11,8 @@ from nornir.core import Nornir
 from nornir.core.filter import F
 from nornir.core.task import AggregatedResult, MultiResult
 
-from ..constants import ErrorType
-from ..types import MCPException
+from nornir_mcp.constants import ErrorType
+from nornir_mcp.types import MCPException
 
 
 class BaseRunner:

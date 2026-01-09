@@ -8,7 +8,8 @@ from typing import Any
 
 from nornir_napalm.plugins.tasks import napalm_get
 
-from ..constants import ErrorType
+from nornir_mcp.constants import ErrorType
+
 from .base_runner import BaseRunner
 
 
@@ -46,6 +47,16 @@ class NapalmRunner(BaseRunner):
 
             # Define an extractor to pull only the specific getter data
             def extract_getter_data(task_output: Any) -> Any:
+                """Extractor function for NAPALM getter results.
+
+                This function extracts the specific getter data from NAPALM task output.
+
+                Args:
+                    task_output: Raw output from the NAPALM getter task
+
+                Returns:
+                    The specific getter data if task_output is a dict, otherwise the task_output unchanged
+                """
                 return task_output.get(getter) if isinstance(task_output, dict) else task_output
 
             return self.process_results(aggregated_result, extractor=extract_getter_data)

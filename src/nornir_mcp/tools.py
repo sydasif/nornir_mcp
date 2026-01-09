@@ -100,7 +100,6 @@ async def run_shell_command(
     command: str,
     host_name: str | None = None,
     group_name: str | None = None,
-    timeout: int = 30,
 ) -> dict[str, Any]:
     """Execute an SSH command on target Linux servers using Paramiko.
 
@@ -108,7 +107,6 @@ async def run_shell_command(
         command: The SSH command to execute (e.g., 'ls -la', 'df -h').
         host_name: Specific host name to target.
         group_name: Specific group to target.
-        timeout: Command execution timeout in seconds (default: 30)
 
     """
     return await _run_tool(
@@ -118,7 +116,6 @@ async def run_shell_command(
         group_name,
         {"backend": Backend.PARAMIKO, "shell_command": command},
         command,
-        timeout=timeout,
     )
 
 

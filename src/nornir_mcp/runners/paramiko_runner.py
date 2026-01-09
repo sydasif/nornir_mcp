@@ -50,20 +50,26 @@ class ParamikoRunner(BaseRunner):
             """Execute SSH command on a single host using nornir-paramiko."""
             try:
                 # Execute the command using nornir-paramiko's paramiko_command task
+                # Note: paramiko_command doesn't accept timeout parameter
                 result = task.run(
                     task=paramiko_command,
-                    command=command,
-                    timeout=timeout
+                    command=command
                 )
 
                 # Extract results from the nornir result object
-                stdout_data = result.result.stdout if hasattr(result.result, 'stdout') else str(result.result)
-                stderr_data = result.result.stderr if hasattr(result.result, 'stderr') else ""
-                exit_status = result.result.exit_code if hasattr(result.result, 'exit_code') else 0
-
-                # For cases where the result is just a string, try to parse it
-                if isinstance(result.result, str):
+                # The result may be different depending on the underlying implementation
+                if hasattr(result.result, 'stdout'):
+                    stdout_data = result.result.stdout
+                    stderr_data = result.result.stderr if hasattr(result.result, 'stderr') else ""
+                    exit_status = result.result.exit_code if hasattr(result.result, 'exit_code') else 0
+                elif isinstance(result.result, str):
+                    # For simple string results
                     stdout_data = result.result
+                    stderr_data = ""
+                    exit_status = 0
+                else:
+                    # Handle other result types
+                    stdout_data = str(result.result)
                     stderr_data = ""
                     exit_status = 0
 
@@ -132,11 +138,12 @@ class ParamikoRunner(BaseRunner):
             """Upload a file to a single host via SFTP using nornir-paramiko."""
             try:
                 # Use nornir-paramiko's sftp task to upload the file
+                # Note: paramiko_sftp expects 'action' parameter, not 'operation'
                 result = task.run(
                     task=paramiko_sftp,
-                    operation='put',
                     src=local_path,
-                    dst=remote_path
+                    dst=remote_path,
+                    action='put'
                 )
 
                 # Return success result
@@ -206,11 +213,12 @@ class ParamikoRunner(BaseRunner):
                     local_file_path = str(path_obj.parent / f"{task.host.name}_{path_obj.name}")
 
                 # Use nornir-paramiko's sftp task to download the file
+                # Note: paramiko_sftp expects 'action' parameter, not 'operation'
                 result = task.run(
                     task=paramiko_sftp,
-                    operation='get',
                     src=remote_path,
-                    dst=local_file_path
+                    dst=local_file_path,
+                    action='get'
                 )
 
                 # Return success result
@@ -279,9 +287,9 @@ class ParamikoRunner(BaseRunner):
                 # Use nornir-paramiko's sftp task to upload the file (replacing SCP)
                 result = task.run(
                     task=paramiko_sftp,
-                    operation='put',
                     src=local_path,
-                    dst=remote_path
+                    dst=remote_path,
+                    action='put'
                 )
 
                 # Return success result
@@ -353,9 +361,9 @@ class ParamikoRunner(BaseRunner):
                 # Use nornir-paramiko's sftp task to download the file (replacing SCP)
                 result = task.run(
                     task=paramiko_sftp,
-                    operation='get',
                     src=remote_path,
-                    dst=local_file_path
+                    dst=local_file_path,
+                    action='get'
                 )
 
                 # Return success result
@@ -437,9 +445,9 @@ class ParamikoRunner(BaseRunner):
                     # Upload the archive using paramiko_sftp
                     result = task.run(
                         task=paramiko_sftp,
-                        operation='put',
                         src=temp_path,
-                        dst=f"/tmp/{os.path.basename(temp_path)}"
+                        dst=f"/tmp/{os.path.basename(temp_path)}",
+                        action='put'
                     )
 
                     # Extract the archive on the remote host using an SSH command
@@ -535,9 +543,9 @@ class ParamikoRunner(BaseRunner):
                 # Download the archive using paramiko_sftp
                 result = task.run(
                     task=paramiko_sftp,
-                    operation='get',
                     src=f"/tmp/{archive_name}",
-                    dst=temp_path
+                    dst=temp_path,
+                    action='get'
                 )
 
                 # Create the local destination directory

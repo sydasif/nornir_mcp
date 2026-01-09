@@ -24,7 +24,7 @@ import yaml
 
 from .constants import ConfigKey, DefaultValue, ErrorType
 from .nornir_init import get_nornir
-from .types import error_response
+from .helpers import error_response
 
 
 def get_inventory() -> dict[str, Any]:

@@ -58,7 +58,7 @@ class NetmikoResult(TypedDict):
     data: dict[str, Any]
 
 
-def error_response(error_type: ErrorType | str, message: str) -> MCPError:
+def error_response(error_type: ErrorType | str, message: str) -> dict[str, str]:
     """Create a standardized MCP error response.
 
     Args:

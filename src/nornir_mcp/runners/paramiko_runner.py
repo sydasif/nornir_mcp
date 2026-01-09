@@ -17,6 +17,7 @@ from nornir_paramiko.plugins.tasks import paramiko_command, paramiko_sftp
 from nornir_mcp.constants import ErrorType
 
 from .base_runner import BaseRunner
+from ..helpers import extract_ssh_data, extract_upload_data, extract_download_data, extract_generic_data, is_safe_extract, validate_file_operation_params
 
 
 class ParamikoRunner(BaseRunner):
@@ -125,24 +126,57 @@ class ParamikoRunner(BaseRunner):
                 task=ssh_command_task, host_name=host_name, group_name=group_name
             )
 
-            # Define an extractor to handle the results properly
-            def extract_ssh_data(task_output: Any) -> Any:
-                """Extractor function for SSH command results.
-
-                This function extracts the relevant data from SSH command task output.
-
-                Args:
-                    task_output: Raw output from the SSH command task
-
-                Returns:
-                    The task output unchanged (passthrough extractor)
-                """
-                return task_output
-
             return self.process_results(aggregated_result, extractor=extract_ssh_data)
 
         except Exception as error:
             self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
+
+    def _create_file_operation_task(self, operation_type: str, local_path: str, remote_path: str):
+        """Create a generic file operation task function.
+
+        Args:
+            operation_type: Type of operation ("upload" or "download")
+            local_path: Local file/directory path
+            remote_path: Remote file/directory path
+
+        Returns:
+            A task function that can be used with Nornir
+        """
+        def file_operation_task(task: Task):
+            """Generic file operation task for upload/download operations."""
+            try:
+                if operation_type == "upload":
+                    # For upload: copy from local_path to remote_path
+                    task.run(task=paramiko_sftp, src=local_path, dst=remote_path, action="put")
+                    return {
+                        "local_path": local_path,
+                        "remote_path": remote_path,
+                        "success": True,
+                        "message": f"File uploaded successfully to {task.host.name}",
+                    }
+                else:  # download
+                    # For download: copy from remote_path to local_path
+                    # Create a unique local path for each host to avoid conflicts
+                    local_file_path = local_path
+                    if len(task.nornir.inventory.hosts) > 1:
+                        # If multiple hosts, append hostname to avoid conflicts
+                        path_obj = Path(local_path)
+                        local_file_path = str(path_obj.parent / f"{task.host.name}_{path_obj.name}")
+
+                    task.run(task=paramiko_sftp, src=remote_path, dst=local_file_path, action="get")
+                    return {
+                        "remote_path": remote_path,
+                        "local_path": local_file_path,
+                        "success": True,
+                        "message": f"File downloaded successfully from {task.host.name} to {local_file_path}",
+                    }
+            except Exception as e:
+                return {
+                    "error": ErrorType.EXECUTION_ERROR,
+                    "message": f"File operation failed: {str(e)}",
+                    "success": False,
+                }
+        return file_operation_task
 
     def sftp_upload(
         self,
@@ -166,72 +200,22 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if not local_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
-        if not remote_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
+        # Validate parameters using helper function
+        try:
+            validate_file_operation_params(local_path, remote_path, "file")
+        except ValueError as e:
+            self.raise_error(ErrorType.INVALID_PARAMETERS, str(e))
 
-        # Validate local file exists
-        if not os.path.exists(local_path):
-            self.raise_error(ErrorType.INVALID_PARAMETERS, f"Local file does not exist: {local_path}")
-
-        def sftp_upload_task(task: Task):
-            """Upload a file to a single host via SFTP using nornir-paramiko.
-
-            This is an internal task function that runs on individual hosts during
-            SFTP upload operations. It handles the actual file upload for a single host.
-
-            Args:
-                task: The Nornir task object for the current host
-
-            Returns:
-                dict: Dictionary containing upload results with keys:
-                    - local_path: Path of the source file
-                    - remote_path: Path of the destination file
-                    - success: Boolean indicating if the upload was successful
-                    - message: Status message
-                    - error: Error type if upload failed
-            """
-            try:
-                # Use nornir-paramiko's sftp task to upload the file
-                # Note: paramiko_sftp expects 'action' parameter, not 'operation'
-                task.run(task=paramiko_sftp, src=local_path, dst=remote_path, action="put")
-
-                # Return success result
-                return {
-                    "local_path": local_path,
-                    "remote_path": remote_path,
-                    "success": True,
-                    "message": f"File uploaded successfully to {task.host.name}",
-                }
-            except Exception as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"File upload failed: {str(e)}",
-                    "success": False,
-                }
+        # Create and run the file operation task
+        file_task = self._create_file_operation_task("upload", local_path, remote_path)
 
         try:
             # Use the parent class method to run the task on hosts
             aggregated_result = self.run_on_hosts(
-                task=sftp_upload_task, host_name=host_name, group_name=group_name
+                task=file_task, host_name=host_name, group_name=group_name
             )
 
-            # Define an extractor to handle the results properly
-            def extract_upload_data(task_output: Any) -> Any:
-                """Extractor function for file upload results.
-
-                This function extracts the relevant data from file upload task output.
-
-                Args:
-                    task_output: Raw output from the file upload task
-
-                Returns:
-                    The task output unchanged (passthrough extractor)
-                """
-                return task_output
-
-            return self.process_results(aggregated_result, extractor=extract_upload_data)
+            return self.process_results(aggregated_result, extractor=extract_generic_data)
 
         except Exception as error:
             self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
@@ -258,75 +242,22 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
+        # Validate parameters using helper function
         if not remote_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
         if not local_path:
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
 
-        def sftp_download_task(task: Task):
-            """Download a file from a single host via SFTP using nornir-paramiko.
-
-            This is an internal task function that runs on individual hosts during
-            SFTP download operations. It handles the actual file download for a single host.
-
-            Args:
-                task: The Nornir task object for the current host
-
-            Returns:
-                dict: Dictionary containing download results with keys:
-                    - remote_path: Path of the source file
-                    - local_path: Path of the destination file
-                    - success: Boolean indicating if the download was successful
-                    - message: Status message
-                    - error: Error type if download failed
-            """
-            try:
-                # Create a unique local path for each host to avoid conflicts
-                local_file_path = local_path
-                if len(task.nornir.inventory.hosts) > 1:
-                    # If multiple hosts, append hostname to avoid conflicts
-                    path_obj = Path(local_path)
-                    local_file_path = str(path_obj.parent / f"{task.host.name}_{path_obj.name}")
-
-                # Use nornir-paramiko's sftp task to download the file
-                # Note: paramiko_sftp expects 'action' parameter, not 'operation'
-                task.run(task=paramiko_sftp, src=remote_path, dst=local_file_path, action="get")
-
-                # Return success result
-                return {
-                    "remote_path": remote_path,
-                    "local_path": local_file_path,
-                    "success": True,
-                    "message": f"File downloaded successfully from {task.host.name} to {local_file_path}",
-                }
-            except Exception as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"File download failed: {str(e)}",
-                    "success": False,
-                }
+        # Create and run the file operation task
+        file_task = self._create_file_operation_task("download", local_path, remote_path)
 
         try:
             # Use the parent class method to run the task on hosts
             aggregated_result = self.run_on_hosts(
-                task=sftp_download_task, host_name=host_name, group_name=group_name
+                task=file_task, host_name=host_name, group_name=group_name
             )
 
-            # Define an extractor to handle the results properly
-            def extract_download_data(task_output: Any) -> Any:
-                """Extractor function for file download results.
-
-                This function extracts the relevant data from file download task output.
-
-                Args:
-                    task_output: Raw output from the file download task
-
-                Returns:
-                    The task output unchanged (passthrough extractor)
-                """
-                return task_output
-
-            return self.process_results(aggregated_result, extractor=extract_download_data)
+            return self.process_results(aggregated_result, extractor=extract_generic_data)
 
         except Exception as error:
             self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
@@ -353,75 +284,9 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if not local_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
-        if not remote_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
-
-        # Validate local file exists
-        if not os.path.exists(local_path):
-            self.raise_error(ErrorType.INVALID_PARAMETERS, f"Local file does not exist: {local_path}")
-
-        def scp_upload_task(task: Task):
-            """Upload a file to a single host via SFTP using nornir-paramiko.
-
-            This is an internal task function that runs on individual hosts during
-            SCP upload operations (using SFTP as replacement). It handles the actual
-            file upload for a single host.
-
-            Args:
-                task: The Nornir task object for the current host
-
-            Returns:
-                dict: Dictionary containing upload results with keys:
-                    - local_path: Path of the source file
-                    - remote_path: Path of the destination file
-                    - success: Boolean indicating if the upload was successful
-                    - message: Status message
-                    - error: Error type if upload failed
-            """
-            try:
-                # Use nornir-paramiko's sftp task to upload the file (replacing SCP)
-                task.run(task=paramiko_sftp, src=local_path, dst=remote_path, action="put")
-
-                # Return success result
-                return {
-                    "local_path": local_path,
-                    "remote_path": remote_path,
-                    "success": True,
-                    "message": f"File uploaded successfully to {task.host.name}",
-                }
-            except Exception as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"File upload failed: {str(e)}",
-                    "success": False,
-                }
-
-        try:
-            # Use the parent class method to run the task on hosts
-            aggregated_result = self.run_on_hosts(
-                task=scp_upload_task, host_name=host_name, group_name=group_name
-            )
-
-            # Define an extractor to handle the results properly
-            def extract_upload_data(task_output: Any) -> Any:
-                """Extractor function for file upload results.
-
-                This function extracts the relevant data from file upload task output.
-
-                Args:
-                    task_output: Raw output from the file upload task
-
-                Returns:
-                    The task output unchanged (passthrough extractor)
-                """
-                return task_output
-
-            return self.process_results(aggregated_result, extractor=extract_upload_data)
-
-        except Exception as error:
-            self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
+        # Since SCP upload is functionally identical to SFTP upload (both use paramiko_sftp),
+        # we can simply call the sftp_upload method
+        return self.sftp_upload(local_path, remote_path, host_name, group_name)
 
     def scp_download(
         self,
@@ -445,78 +310,9 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if not remote_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
-        if not local_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
-
-        def scp_download_task(task: Task):
-            """Download a file from a single host via SFTP using nornir-paramiko.
-
-            This is an internal task function that runs on individual hosts during
-            SCP download operations (using SFTP as replacement). It handles the actual
-            file download for a single host.
-
-            Args:
-                task: The Nornir task object for the current host
-
-            Returns:
-                dict: Dictionary containing download results with keys:
-                    - remote_path: Path of the source file
-                    - local_path: Path of the destination file
-                    - success: Boolean indicating if the download was successful
-                    - message: Status message
-                    - error: Error type if download failed
-            """
-            try:
-                # Create a unique local path for each host to avoid conflicts
-                local_file_path = local_path
-                if len(task.nornir.inventory.hosts) > 1:
-                    # If multiple hosts, append hostname to avoid conflicts
-                    path_obj = Path(local_path)
-                    local_file_path = str(path_obj.parent / f"{task.host.name}_{path_obj.name}")
-
-                # Use nornir-paramiko's sftp task to download the file (replacing SCP)
-                task.run(task=paramiko_sftp, src=remote_path, dst=local_file_path, action="get")
-
-                # Return success result
-                return {
-                    "remote_path": remote_path,
-                    "local_path": local_file_path,
-                    "success": True,
-                    "message": f"File downloaded successfully from {task.host.name} to {local_file_path}",
-                }
-            except Exception as e:
-                return {
-                    "error": ErrorType.EXECUTION_ERROR,
-                    "message": f"File download failed: {str(e)}",
-                    "success": False,
-                }
-
-        try:
-            # Use the parent class method to run the task on hosts
-            aggregated_result = self.run_on_hosts(
-                task=scp_download_task, host_name=host_name, group_name=group_name
-            )
-
-            # Define an extractor to handle the results properly
-            def extract_download_data(task_output: Any) -> Any:
-                """Extractor function for file download results.
-
-                This function extracts the relevant data from file download task output.
-
-                Args:
-                    task_output: Raw output from the file download task
-
-                Returns:
-                    The task output unchanged (passthrough extractor)
-                """
-                return task_output
-
-            return self.process_results(aggregated_result, extractor=extract_download_data)
-
-        except Exception as error:
-            self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
+        # Since SCP download is functionally identical to SFTP download (both use paramiko_sftp),
+        # we can simply call the sftp_download method
+        return self.sftp_download(remote_path, local_path, host_name, group_name)
 
     def scp_upload_recursive(
         self,
@@ -540,33 +336,15 @@ class ParamikoRunner(BaseRunner):
             MCPException: If the operation fails
 
         """
-        if not local_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
-        if not remote_path:
-            self.raise_error(ErrorType.INVALID_PARAMETERS, "Remote path parameter is required")
-
-        # Validate local directory exists
-        if not os.path.exists(local_path):
-            self.raise_error(ErrorType.INVALID_PARAMETERS, f"Local directory does not exist: {local_path}")
+        # Validate parameters using helper function
+        try:
+            validate_file_operation_params(local_path, remote_path, "directory")
+        except ValueError as e:
+            self.raise_error(ErrorType.INVALID_PARAMETERS, str(e))
 
         def scp_upload_recursive_task(task: Task):
-            """Upload a directory to a single host via SSH command (replacing recursive SCP).
-
-            This is an internal task function that runs on individual hosts during
-            recursive directory upload operations. It handles the compression, upload,
-            and extraction of directories for a single host.
-
-            Args:
-                task: The Nornir task object for the current host
-
-            Returns:
-                dict: Dictionary containing upload results with keys:
-                    - local_path: Path of the source directory
-                    - remote_path: Path of the destination directory
-                    - success: Boolean indicating if the upload was successful
-                    - message: Status message
-                    - error: Error type if upload failed
-            """
+            """Upload a directory to a single host via SSH command (replacing recursive SCP)."""
+            temp_path = None
             try:
                 # Create a temporary tar file of the directory
                 with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp_file:
@@ -576,42 +354,42 @@ class ParamikoRunner(BaseRunner):
                 with tarfile.open(temp_path, "w:gz") as tar:
                     tar.add(local_path, arcname=os.path.basename(local_path))
 
-                try:
-                    # Upload the archive using paramiko_sftp
-                    # Using /tmp/ is intentional for temporary file transfer to remote system
-                    task.run(
-                        task=paramiko_sftp,
-                        src=temp_path,
-                        dst=f"/tmp/{os.path.basename(temp_path)}",  # noqa: S108
-                        action="put",
-                    )
+                # Upload the archive using paramiko_sftp
+                # Using /tmp/ is intentional for temporary file transfer to remote system
+                task.run(
+                    task=paramiko_sftp,
+                    src=temp_path,
+                    dst=f"/tmp/{os.path.basename(temp_path)}",  # noqa: S108
+                    action="put",
+                )
 
-                    # Extract the archive on the remote host using an SSH command
-                    extract_cmd = (
-                        f'mkdir -p "{remote_path}" && '
-                        f'cd "{remote_path}" && '
-                        f'tar -xzf "/tmp/{os.path.basename(temp_path)}" && '
-                        f'rm "/tmp/{os.path.basename(temp_path)}"'
-                    )
+                # Extract the archive on the remote host using an SSH command
+                extract_cmd = (
+                    f'mkdir -p "{remote_path}" && '
+                    f'cd "{remote_path}" && '
+                    f'tar -xzf "/tmp/{os.path.basename(temp_path)}" && '
+                    f'rm "/tmp/{os.path.basename(temp_path)}"'
+                )
 
-                    # Execute the extraction command
-                    task.run(task=paramiko_command, command=extract_cmd)
+                # Execute the extraction command
+                task.run(task=paramiko_command, command=extract_cmd)
 
-                    return {
-                        "local_path": local_path,
-                        "remote_path": remote_path,
-                        "success": True,
-                        "message": f"Directory uploaded successfully to {task.host.name}",
-                    }
-                finally:
-                    # Clean up the temporary file
-                    os.unlink(temp_path)
+                return {
+                    "local_path": local_path,
+                    "remote_path": remote_path,
+                    "success": True,
+                    "message": f"Directory uploaded successfully to {task.host.name}",
+                }
             except Exception as e:
                 return {
                     "error": ErrorType.EXECUTION_ERROR,
                     "message": f"Directory upload failed: {str(e)}",
                     "success": False,
                 }
+            finally:
+                # Clean up the temporary file if it was created
+                if temp_path and os.path.exists(temp_path):
+                    os.unlink(temp_path)
 
         try:
             # Use the parent class method to run the task on hosts
@@ -619,21 +397,7 @@ class ParamikoRunner(BaseRunner):
                 task=scp_upload_recursive_task, host_name=host_name, group_name=group_name
             )
 
-            # Define an extractor to handle the results properly
-            def extract_upload_data(task_output: Any) -> Any:
-                """Extractor function for file upload results.
-
-                This function extracts the relevant data from file upload task output.
-
-                Args:
-                    task_output: Raw output from the file upload task
-
-                Returns:
-                    The task output unchanged (passthrough extractor)
-                """
-                return task_output
-
-            return self.process_results(aggregated_result, extractor=extract_upload_data)
+            return self.process_results(aggregated_result, extractor=extract_generic_data)
 
         except Exception as error:
             self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
@@ -666,23 +430,8 @@ class ParamikoRunner(BaseRunner):
             self.raise_error(ErrorType.INVALID_PARAMETERS, "Local path parameter is required")
 
         def scp_download_recursive_task(task: Task):
-            """Download a directory from a single host via SSH command (replacing recursive SCP).
-
-            This is an internal task function that runs on individual hosts during
-            recursive directory download operations. It handles the archiving, download,
-            and extraction of directories for a single host.
-
-            Args:
-                task: The Nornir task object for the current host
-
-            Returns:
-                dict: Dictionary containing download results with keys:
-                    - remote_path: Path of the source directory
-                    - local_path: Path of the destination directory
-                    - success: Boolean indicating if the download was successful
-                    - message: Status message
-                    - error: Error type if download failed
-            """
+            """Download a directory from a single host via SSH command (replacing recursive SCP)."""
+            temp_path = None
             try:
                 # Create a temporary tar file to store the archive
                 with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp_file:
@@ -722,24 +471,6 @@ class ParamikoRunner(BaseRunner):
 
                 # Extract the archive locally with path traversal protection
                 with tarfile.open(temp_path, "r:gz") as tar:
-
-                    def is_safe_extract(member: tarfile.TarInfo, extract_path: str) -> bool:
-                        """Check if a tar archive member is safe to extract (prevent path traversal).
-
-                        This function implements path traversal protection by ensuring that
-                        extracted files remain within the intended destination directory.
-
-                        Args:
-                            member: TarInfo object representing the archive member
-                            extract_path: Base path where extraction should occur
-
-                        Returns:
-                            bool: True if the path is safe to extract, False otherwise
-                        """
-                        member_path = os.path.abspath(os.path.join(extract_path, member.name))
-                        extract_path = os.path.abspath(extract_path)
-                        return member_path.startswith(extract_path + os.sep) or member_path == extract_path
-
                     for member in tar.getmembers():
                         if not is_safe_extract(member, local_dir_path):
                             raise ValueError(f"Unsafe path in archive: {member.name}")
@@ -750,9 +481,6 @@ class ParamikoRunner(BaseRunner):
                 cleanup_cmd = f'rm "/tmp/{archive_name}"'
                 task.run(task=paramiko_command, command=cleanup_cmd)
 
-                # Clean up the temporary file
-                os.unlink(temp_path)
-
                 return {
                     "remote_path": remote_path,
                     "local_path": local_dir_path,
@@ -760,15 +488,15 @@ class ParamikoRunner(BaseRunner):
                     "message": f"Directory downloaded successfully from {task.host.name} to {local_dir_path}",
                 }
             except Exception as e:
-                # Attempt to clean up temp files in case of error
-                with suppress(OSError):
-                    os.unlink(temp_path)
-
                 return {
                     "error": ErrorType.EXECUTION_ERROR,
                     "message": f"Directory download failed: {str(e)}",
                     "success": False,
                 }
+            finally:
+                # Clean up the temporary file if it was created
+                if temp_path and os.path.exists(temp_path):
+                    os.unlink(temp_path)
 
         try:
             # Use the parent class method to run the task on hosts
@@ -776,21 +504,7 @@ class ParamikoRunner(BaseRunner):
                 task=scp_download_recursive_task, host_name=host_name, group_name=group_name
             )
 
-            # Define an extractor to handle the results properly
-            def extract_download_data(task_output: Any) -> Any:
-                """Extractor function for file download results.
-
-                This function extracts the relevant data from file download task output.
-
-                Args:
-                    task_output: Raw output from the file download task
-
-                Returns:
-                    The task output unchanged (passthrough extractor)
-                """
-                return task_output
-
-            return self.process_results(aggregated_result, extractor=extract_download_data)
+            return self.process_results(aggregated_result, extractor=extract_generic_data)
 
         except Exception as error:
             self.raise_error(ErrorType.EXECUTION_ERROR, str(error))
